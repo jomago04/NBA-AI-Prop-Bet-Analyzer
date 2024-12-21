@@ -79,6 +79,8 @@ class ScraperTester:
             print(f"✗ Error: {str(e)}")
 
 def main():
+    
+    # runs scraper
     tester = ScraperTester()
     player_name = input("Enter NBA player name (First Last): ")
     tester.test_player(player_name)
