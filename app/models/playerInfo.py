@@ -2,7 +2,10 @@ from pydantic import BaseModel
 from typing import Optional
 
 class PlayerAverageLastFiveGameStats(BaseModel):
+    # Text fields (strings)  (May be ideal to move name to seasonal stats since it already has strings)
     name: str
+    
+    # Decimal numbers (floats) 
     minutes_played: float
     field_goals: float
     field_goals_attempted: float

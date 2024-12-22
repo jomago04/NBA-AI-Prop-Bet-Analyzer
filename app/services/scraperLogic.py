@@ -2,11 +2,16 @@ import requests
 from bs4 import BeautifulSoup
 from app.models.playerInfo import PlayerAverageLastFiveGameStats, PlayerSeasonalStats, PlayerOpposingTeamStats
 
+
+# Main class for scraping player data
 class PlayerService:
+    
+    # Gets player url
     @staticmethod
     def get_nbaplayer_url(player_name: str) -> requests.Response:
+        # Splits player name into first and last name
         name_parts = player_name.lower().split()
-    
+        # Checks if player name has both first and last name to avoid errors
         if len(name_parts) < 2:
             return "Please enter both first and last name"
         
@@ -18,38 +23,49 @@ class PlayerService:
         player_response = requests.get(player_url)
         
         return player_response
-        
+    
+    # Gets next opposing team url
     @staticmethod
     def get_nbaplayer_opposingteam_url(player_response: requests.Response) -> str:
         try:
+            # Parses player response for bs4 and finds div container under the last 5 game stats
             soup = BeautifulSoup(player_response.content, 'html.parser')
             next_game = soup.find('div', {'id': 'tfooter_last5'})
             
+            # Checks if next game is found
             if next_game:
+                # Grabs next game url ender
                 next_game_url_ender = next_game.find('a')['href']
+                # Grabs team code from next game url ender
                 team_code = next_game_url_ender.split('/')[2]
+                # Creates opposing team url
                 opposing_team_url = f"https://www.basketball-reference.com/teams/{team_code}/stats_per_game_totals.html"
                 
                 return opposing_team_url
             
+            # If next game is not found, returns error message
             else:
                 return "Could not find next game"
         
         except Exception as e:
             return f"Error: {str(e)}"
         
+    # Gets last 5 game stats
     @staticmethod
     def get_nbaplayer_5game_stats(player_response: requests.Response) -> PlayerAverageLastFiveGameStats:
         try:
+            # Parses player response for bs4 and finds table with the last 5 game stats
             soup = BeautifulSoup(player_response.content, 'html.parser')
             table = soup.find('table', {'id': 'last5'})
             
-            
+            # Grabs player name from div container near the top of the page
             name_div = soup.find('div', {'id': 'info'})
             player_name = name_div.find('h1').text.strip()
                 
+            # Checks if table is found
             if table:
-                rows = table.find_all('tr')[1:]  # Skip header row
+                # Grabs all rows in table except header row [1:]
+                rows = table.find_all('tr')[1:]  
                 
                 # Initialize stats
                 total_mp = 0
@@ -57,11 +73,14 @@ class PlayerService:
                 total_ft = total_fta = total_ft_pct = 0
                 total_3p = total_3pa = total_3p_pct = 0
                 total_rebounds = total_assists = total_steals = total_turnovers = 0
+                # Grabs number of games
                 games = len(rows)
                 
-                # Sum up the stats
+               
                 for row in rows:
+                    # Grabs all cells in row
                     cells = row.find_all('td')
+                    # Adds up stats
                     total_mp += float(cells[5].text.strip())  # Minutes Played
                     total_fg += float(cells[6].text.strip())  # Field Goals
                     total_fga += float(cells[7].text.strip())  # Field Goals Attempted
@@ -77,6 +96,7 @@ class PlayerService:
                     total_steals += float(cells[19].text.strip())  # Total Steals
                     total_turnovers += float(cells[21].text.strip())  # Total Turnovers
                     
+                # Calculates average stats
                 avg_mp = total_mp / games
                 avg_fg = total_fg / games
                 avg_fga = total_fga / games
@@ -92,6 +112,7 @@ class PlayerService:
                 avg_steals = total_steals / games
                 avg_turnovers = total_turnovers / games
                 
+                # Returns PlayerAverageLastFiveGameStats object
                 return PlayerAverageLastFiveGameStats(
                     name=player_name,
                     minutes_played=avg_mp,
@@ -114,23 +135,29 @@ class PlayerService:
             
         except Exception as e:
             raise Exception(f"Error processing player stats: {str(e)}")
-        
+ 
+    # Gets players seasonal stats 
     @staticmethod
     def get_nbaplayer_seasonal_stats(player_response: requests.Response) -> PlayerSeasonalStats:
         try:
-        
+            # Parses player response for bs4 and finds table with the seasonal stats
             soup = BeautifulSoup(player_response.content, 'html.parser')
             table = soup.find('table', {'id': 'per_game_stats'})
             
+            # Checks if table is found
             if table:
+                # Grabs all rows in table
                 rows = table.find('tbody').find_all('tr')
+                # Grabs latest season [-1]
                 latest_season = rows[-1]
+                # Grabs all cells in latest season
                 row_cells = latest_season.find_all('td')
                 
+                # Returns PlayerSeasonalStats object
                 return PlayerSeasonalStats(
                     season=latest_season.find('th', {'data-stat': 'year_id'}).text.strip(),
                     age=row_cells[0].text.strip(),
-                    team=row_cells[2].text.strip(),
+                    team=row_cells[1].text.strip(),
                     position=row_cells[3].text.strip(),
                     games=int(row_cells[4].text.strip()),
                     games_started=int(row_cells[5].text.strip()),
@@ -159,17 +186,18 @@ class PlayerService:
         except Exception as e:
             raise Exception(f"Error processing seasonal stats: {str(e)}")
 
-        
+    # Gets opposing team stats
     @staticmethod
     def get_opposing_team_stats(opposing_team_url: str) -> PlayerOpposingTeamStats:
         try:
-            # Dictionary of known team code mappings
+            # Dictionary of known team code mappings (for teams that have moved or changed names find better way to do this)
             team_code_mappings = {
                 'NOP': 'NOH',
                 'BRK': 'BKN',
                 'CHO': 'CHA',
             }
 
+            # Tries to get team response from url
             def try_team_url(url):
                 response = requests.get(url)
                 if response.status_code == 200:
@@ -181,26 +209,19 @@ class PlayerService:
             
             # If original URL fails, try alternative team codes
             if not team_response:
+                # Grabs team code from url
                 team_code = opposing_team_url.split('/')[4]
+                # Checks if team code is in the dictionary
                 if team_code in team_code_mappings:
+                    # Replaces team code with alternative team code
                     alternative_url = opposing_team_url.replace(team_code, team_code_mappings[team_code])
                     team_response = try_team_url(alternative_url)
-
+            # If team response is found, parses for bs4 and finds table with the team stats
             if team_response:
                 soup = BeautifulSoup(team_response.content, 'html.parser')
-                
-                # Check for redirect
-                meta_refresh = soup.find('meta', {'http-equiv': 'refresh'})
-                if meta_refresh:
-                    redirect_url = meta_refresh['content'].split('URL=')[1]
-                    full_redirect_url = f"https://www.basketball-reference.com{redirect_url}"
-                    team_response = requests.get(full_redirect_url)
-                    soup = BeautifulSoup(team_response.content, 'html.parser')
-
                 table = soup.find('table', {'id': 'stats'})
                 if table:
                     team_stats = table.find('tbody').find('tr')
-
                     # Create and return PlayerOpposingTeamStats object
                     return PlayerOpposingTeamStats(
                         team_name=team_stats.find('td', {'data-stat': 'team_id'}).text,
