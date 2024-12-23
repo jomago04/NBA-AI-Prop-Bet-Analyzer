@@ -1,5 +1,5 @@
 from openai import OpenAI
-from app.models.aiQuery import AIQueryInput, AIQueryResponse
+from app.models.aiQueryInfo import AIQueryInput, AIQueryResponse
 
 class AIAnalysisService:
     def __init__(self):
