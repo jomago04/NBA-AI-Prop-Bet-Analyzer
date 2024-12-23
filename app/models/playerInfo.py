@@ -1,9 +1,15 @@
 from pydantic import BaseModel
 from typing import Optional
 
+class PlayerBasicInfo(BaseModel):
+    name: str
+    team: str
+    position: str
+    age: int
+    experience: int
+
 class PlayerAverageLastFiveGameStats(BaseModel):
     # Text fields (strings)  (May be ideal to move name to seasonal stats since it already has strings)
-    name: str
     
     # Decimal numbers (floats) 
     minutes_played: float
@@ -51,6 +57,7 @@ class PlayerSeasonalStats(BaseModel):
     total_rebounds: float
     total_assists: float
     total_steals: float
+    points: float
 
 class PlayerOpposingTeamStats(BaseModel):
     team_name: str
