@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from app.services.scraperLogic import PlayerService
-from app.services.aiService import AIAnalysisService
-from app.models.aiQuery import AIQueryInput
+from app.services.aiLogic import AIAnalysisService
+from app.models.aiQueryInfo import AIQueryInput
 
 app = FastAPI(title="NBA Props Analysis API")
 player_service = PlayerService()
