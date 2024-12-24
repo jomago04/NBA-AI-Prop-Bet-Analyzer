@@ -8,6 +8,7 @@ class PlayerBasicInfo(BaseModel):
     age: int
     experience: int
 
+
 class PlayerAverageLastFiveGameStats(BaseModel):
     # Text fields (strings)  (May be ideal to move name to seasonal stats since it already has strings)
     
@@ -72,3 +73,85 @@ class PlayerOpposingTeamStats(BaseModel):
     steals: float
     blocks: float
     turnovers: float
+    
+    
+    
+    #BASIC INFO
+    #name (top of page)
+    #team (top of page)
+    #position (per game log - seasonal)
+    #age (per game log - seasonal)
+    #experience (top of page)
+    #days_since_last_game (advanced game log (might be better way))
+    
+    #5 GAME AVERAGE STATS
+    # https://www.basketball-reference.com/players/j/jamesle01.html
+    #average_minutes_played
+    #average_field_goals
+    #average_field_goals_attempted
+    #average_field_goal_percentage
+    #average_three_points
+    #average_three_points_attempted
+    #average_three_point_percentage
+    #average_free_throws
+    #average_free_throws_attempted
+    #average_free_throw_percentage
+    #average_offensive_rebounds
+    #average_defensive_rebounds
+    #average_total_rebounds
+    #average_assists
+    #average_steals
+    #average_blocks
+    #average_turnovers
+    #average_points
+    #average_game_score
+    #average_plusminus
+    # https://www.basketball-reference.com/players/j/jamesle01/gamelog-advanced/2025
+    #true_shooting_percentage
+    #effective_field_goal_percentage
+    #usage_percentage
+    #offensive_rating
+    #defensive_rating
+    
+    #SEASONAL STATS
+    #games_played
+    #games_started
+    #games_started_percentage
+    #field_goals
+    #field_goals_attempted
+    #field_goal_percentage
+    #three_points
+    #three_points_attempted
+    #three_point_percentage
+    #free_throws
+    #free_throws_attempted
+    #free_throw_percentage
+    #offensive_rebounds
+    #defensive_rebounds
+    #total_rebounds
+    #assists
+    #steals
+    #blocks
+    #turnovers
+    #points
+    #true_shooting_percentage
+    #usage_percentage
+    #offensive_rating
+    #defensive_rating
+    #plusminus
+    #average_minutes_played
+    #average_points
+    #average_total_rebounds
+    #average_assists
+    
+    #OPPOSING TEAM STATS
+    
+    #potential addtions - Pace (possesions per 48 mins), On/Off splits, home/away splits, days since last game, 
+    
+    
+    
+    
+    
+    # prop bet database prep: https://www.bettingpros.com/nba/props/nikola-jokic/points/ for reference
+    # catagories to scrape: points, assists, rebounds, 3pts, steals, blocks
+    #
