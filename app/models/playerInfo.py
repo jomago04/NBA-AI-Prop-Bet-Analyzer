@@ -73,80 +73,144 @@ class PlayerOpposingTeamStats(BaseModel):
     steals: float
     blocks: float
     turnovers: float
+
     
+ #########################################
+ #         FOR SELENIUM SCRAPING 
+ #########################################
     
+class PlayerInfo(BaseModel):
+    name: str #(top of page)
+    team: str #(top of page)
+    position: str #(per game log - seasonal)
+    age: int #(per game log - seasonal)
+    experience: int #(top of page)
+    days_since_last_game: int #(advanced game log (might be better way))
     
-    #BASIC INFO
-    #name (top of page)
-    #team (top of page)
-    #position (per game log - seasonal)
-    #age (per game log - seasonal)
-    #experience (top of page)
-    #days_since_last_game (advanced game log (might be better way))
-    
-    #5 GAME AVERAGE STATS
+class PlayerLastFiveGameStats(BaseModel):
     # https://www.basketball-reference.com/players/j/jamesle01.html
-    #average_minutes_played
-    #average_field_goals
-    #average_field_goals_attempted
-    #average_field_goal_percentage
-    #average_three_points
-    #average_three_points_attempted
-    #average_three_point_percentage
-    #average_free_throws
-    #average_free_throws_attempted
-    #average_free_throw_percentage
-    #average_offensive_rebounds
-    #average_defensive_rebounds
-    #average_total_rebounds
-    #average_assists
-    #average_steals
-    #average_blocks
-    #average_turnovers
-    #average_points
-    #average_game_score
-    #average_plusminus
-    # https://www.basketball-reference.com/players/j/jamesle01/gamelog-advanced/2025
-    #true_shooting_percentage
-    #effective_field_goal_percentage
-    #usage_percentage
-    #offensive_rating
-    #defensive_rating
+    average_minutes_played: float
+    average_field_goals: float
+    average_field_goals_attempted: float
+    average_field_goal_percentage: float
+    average_three_points: float
+    average_three_points_attempted: float
+    average_three_point_percentage: float
+    average_free_throws: float
+    average_free_throws_attempted: float
+    average_free_throw_percentage: float
+    average_offensive_rebounds: float
+    average_defensive_rebounds: float
+    average_total_rebounds: float
+    average_assists: float
+    average_steals: float
+    average_blocks: float
+    average_turnovers: float
+    average_points: float
+    average_game_score: float
+    average_plusminus: float
+        # https://www.basketball-reference.com/players/j/jamesle01/gamelog-advanced/2025
+    true_shooting_percentage: float
+    effective_field_goal_percentage: float
+    usage_percentage: float
+    offensive_rating: float
+    defensive_rating: float
     
-    #SEASONAL STATS
-    #games_played
-    #games_started
-    #games_started_percentage
-    #field_goals
-    #field_goals_attempted
-    #field_goal_percentage
-    #three_points
-    #three_points_attempted
-    #three_point_percentage
-    #free_throws
-    #free_throws_attempted
-    #free_throw_percentage
-    #offensive_rebounds
-    #defensive_rebounds
-    #total_rebounds
-    #assists
-    #steals
-    #blocks
-    #turnovers
-    #points
-    #true_shooting_percentage
-    #usage_percentage
-    #offensive_rating
-    #defensive_rating
-    #plusminus
-    #average_minutes_played
-    #average_points
-    #average_total_rebounds
-    #average_assists
+class PlayerCurrentSeasonStats(BaseModel):
+    games_played: int
+    games_started: int
+    games_started_percentage: float
+    field_goals: float
+    field_goals_attempted: float
+    field_goal_percentage: float
+    three_points: float
+    three_points_attempted: float
+    three_point_percentage: float
+    free_throws: float
+    free_throws_attempted: float
+    free_throw_percentage: float
+    offensive_rebounds: float
+    defensive_rebounds: float
+    total_rebounds: float
+    assists: float
+    steals: float
+    blocks: float
+    turnovers: float
+    points: float
+    true_shooting_percentage: float
+    usage_percentage: float
+    offensive_rating: float
+    defensive_rating: float
+    plusminus: float
+    average_minutes_played: float
+    average_points: float
+    average_total_rebounds: float
+    average_assists: float
     
-    #OPPOSING TEAM STATS
-    
-    #potential addtions - Pace (possesions per 48 mins), On/Off splits, home/away splits, days since last game, 
+class PlayerOpposingTeamStats(BaseModel):
+    opponent_team_name: str
+    opponent_wins: int
+    opponent_losses: int
+    opponent_win_percentage: float
+    opponent_field_goals: float
+    opponent_field_goals_attempted: float
+    opponent_field_goal_ratio: float
+    opponent_three_points: float
+    opponent_three_points_attempted: float
+    opponent_three_point_ratio: float
+    opponent_two_points: float
+    opponent_two_points_attempted: float
+    opponent_two_point_ratio: float
+    opponent_free_throws: float
+    opponent_free_throws_attempted: float
+    opponent_free_throw_ratio: float
+    opponent_offensive_rebounds: float
+    opponent_defensive_rebounds: float
+    opponent_average_assists: float
+    opponent_average_steals: float
+    opponent_average_blocks: float
+    opponent_average_turnovers: float
+    opponent_average_points: float
+    opponent_offensive_rating: float
+    opponent_defensive_rating: float
+    opponent_pace_factor: float
+    opponent_free_throw_rate: float
+    opponent_three_point_rate: float
+    opponent_effective_field_goal_percentage: float
+    opponent_turnover_percentage: float
+    opponent_offensive_rebound_percentage: float
+    opponent_free_throw_rate: float
+    #HOW OTHER TEAMS PLAY AGAINST OPPONENT
+    opponent_opponent_field_goals: float
+    opponent_opponent_field_goals_attempted: float
+    opponent_opponent_field_goal_ratio: float
+    opponent_opponent_three_points: float
+    opponent_opponent_three_points_attempted: float
+    opponent_opponent_three_point_ratio: float
+    opponent_opponent_two_points: float
+    opponent_opponent_two_points_attempted: float
+    opponent_opponent_two_point_ratio: float
+    opponent_opponent_free_throws: float
+    opponent_opponent_free_throws_attempted: float
+    opponent_opponent_free_throw_ratio: float
+    opponent_opponent_offensive_rebounds: float
+    opponent_opponent_defensive_rebounds: float
+    opponent_opponent_average_assists: float
+    opponent_opponent_average_steals: float
+    opponent_opponent_average_blocks: float
+    opponent_opponent_average_turnovers: float
+    #DEFENSIVE FOUR FACTORS
+    opponent_opponent_effective_field_goal_percentage: float
+    opponent_opponent_turnover_percentage: float
+    opponent_opponent_defensive_rebound_percentage: float
+    opponent_opponent_free_throw_rate: float
+
+
+
+
+
+
+    #potential addtions - Pace (possesions per 48 mins), On/Off splits, home/away splits, days since last game, injuries
     
     
     
