@@ -8,8 +8,26 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 class SeleniumScraper:
     def __init__(self):
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        self.wait = WebDriverWait(self.driver, 10)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-notifications")
+        chrome_options.add_argument("--disable-logging")
+        chrome_options.add_argument("--log-level=3")  # Only show fatal errors
+        chrome_options.add_argument("--ignore-certificate-errors") 
+        chrome_options.add_argument("--ignore-ssl-errors")  
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Suppress console logging
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-browser-side-navigation")
+        chrome_options.add_argument("--dns-prefetch-disable")
+        chrome_options.add_argument("--disable-web-security")
+        chrome_options.page_load_strategy = 'eager'  # Don't wait for all resources to load
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        self.wait = WebDriverWait(self.driver, 5)
 
     def get_player_url(player_name: str) -> str:
         # Splits player name into first and last name
@@ -23,10 +41,59 @@ class SeleniumScraper:
         main_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01.html"
         splits_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/splits/2025" # TODO: Make way to get current year
         gamelog_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/gamelog/2025"
+        advanced_gamelog_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/gamelog-advanced/2025"
         
-        return main_player_url, splits_player_url, gamelog_player_url
+        return main_player_url, splits_player_url, gamelog_player_url, advanced_gamelog_player_url
 
     def get_opposing_team_url(self, main_player_url: str) -> str:
-        self.driver.get(main_player_url)
-        opposing_team_key = self.wait.until(EC.presence_of_element_located((By.ID, "GET ID UNDER LAST 5 GAME TABLE ")))
+        try:
+            self.driver.set_page_load_timeout(10)
+            self.driver.get(main_player_url)
+            opposing_team_key = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#tfooter_last5 a")), message="Could not find opposing team element")
+            
+        except Exception as e:
+            print(f"Error getting opposing team: {str(e)}")
+            return None
+        
+        return opposing_team_key.text
+    
+    def get_player_five_game_stats(self, gamelog_player_url: str):
+        try:
+            self.driver.get(gamelog_player_url)
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#pgl_basic")))
+            rows = table.find_elements(By.CSS_SELECTOR, "tbody tr:not(.thead)")[-5:]  # Get only last 5 rows
+            
+            last_five_game_stats = []
+            for row in rows:
+                cells = row.find_elements(By.TAG_NAME, "td")
+                try:
+                    game_stats = {
+                        'field_goals': int(cells[9].text),
+                        'field_goal_attempts': int(cells[10].text),
+                        'field_goal_percentage': float(cells[11].text),
+                        'points': int(cells[26].text)
+                    }
+                    last_five_game_stats.append(game_stats)
+                except (ValueError, IndexError) as e:
+                    continue
+                    
+            return last_five_game_stats
+            
+        except Exception as e:
+            print(f"Error retrieving game stats: {str(e)}")
+            return []
+        
+    def calculate_player_five_game_stats(self, last_five_game_stats: list):
+        if not last_five_game_stats:
+            return {}
+        
+        averages = {
+            'average_field_goals': sum(game['field_goals'] for game in last_five_game_stats) / len(last_five_game_stats),
+            'average_field_goal_attempts': sum(game['field_goal_attempts'] for game in last_five_game_stats) / len(last_five_game_stats),
+            'average_field_goal_percentage': sum(game['field_goal_percentage'] for game in last_five_game_stats) / len(last_five_game_stats),
+            'average_points': sum(game['points'] for game in last_five_game_stats) / len(last_five_game_stats)
+        }
+        
+        return averages
+        
 
