@@ -218,4 +218,4 @@ class PlayerOpposingTeamStats(BaseModel):
     
     # prop bet database prep: https://www.bettingpros.com/nba/props/nikola-jokic/points/ for reference
     # catagories to scrape: points, assists, rebounds, 3pts, steals, blocks
-    #
+    
