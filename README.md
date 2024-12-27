@@ -1,4 +1,4 @@
-# NBA Stats Scraper
+# NBA AI Prop Bet Analyzer
 
 Python project that scrapes NBA player statistics for prop bet analysis.
 
