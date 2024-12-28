@@ -1,10 +1,10 @@
 class NameFormat:
-    def get_name_parts(player_name: str):
-        name_parts = player_name.lower().split()
+    def getNameParts(playerName: str):
+        nameParts = playerName.lower().split()
         
-        return name_parts
+        return nameParts
     
-    def format_name(name_parts: list[str]):
-        formatted_player_name = ' '.join(word.capitalize() for word in name_parts)
+    def formatName(nameParts: list[str]):
+        formattedPlayerName = ' '.join(word.capitalize() for word in nameParts)
         
-        return formatted_player_name
+        return formattedPlayerName

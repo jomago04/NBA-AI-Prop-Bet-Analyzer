@@ -51,15 +51,14 @@ class SeleniumConfig:
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
             
-            # Set various timeouts
+            # Set timeouts
             driver.set_page_load_timeout(10)
             driver.set_script_timeout(5)
+            
+            # Create WebDriverWait object
             wait = WebDriverWait(driver, 5)
             
-            # Set window size and position
-            driver.set_window_size(1920, 1080)
-            driver.set_window_position(0, 0)
-            
+            # Return both driver and wait objects
             return driver, wait
             
         except Exception as e:
