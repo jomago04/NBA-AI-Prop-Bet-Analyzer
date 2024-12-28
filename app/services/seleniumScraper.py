@@ -1,40 +1,17 @@
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from app.utilities.timeConverter import TimeConverter
 from app.utilities.nameFormat import NameFormat
+from app.config.selenium_config import SeleniumConfig
+from app.config.constants import ScraperConstants
 
 class SeleniumScraper:
     # Initializes the scraper on run
     def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless") # Runs in background
-        chrome_options.add_argument("--disable-gpu") # Disables GPU acceleration
-        chrome_options.add_argument("--no-sandbox") # Disables sandboxing
-        chrome_options.add_argument("--disable-dev-shm-usage") # Disables shared memory usage
-        chrome_options.add_argument("--disable-notifications") # Disables notifications
-        chrome_options.add_argument("--disable-logging") # Disables logging
-        chrome_options.add_argument("--log-level=3")  # Only show fatal errors
-        chrome_options.add_argument("--ignore-certificate-errors") # Ignores certificate errors
-        chrome_options.add_argument("--ignore-ssl-errors") # Ignores SSL errors
-        chrome_options.add_argument("--ignore-certificate-errors-spki-list")
-        chrome_options.add_argument("--allow-insecure-localhost")
-        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Suppress console logging
-        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
-        chrome_options.add_argument("--disable-extensions") # Disables extensions
-        chrome_options.add_argument("--disable-browser-side-navigation") # Disables browser side navigation
-        chrome_options.add_argument("--dns-prefetch-disable") # Disables DNS prefetch
-        chrome_options.add_argument("--disable-web-security") # Disables web security
-        chrome_options.page_load_strategy = 'eager'  # Don't wait for all resources to load
-        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) # Suppresses console logging
+        self.driver, self.init = SeleniumConfig.initialize_driver()
         
-        # Initializes the driver and wait
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-        self.wait = WebDriverWait(self.driver, 5)
+    def __del__(self):
+        SeleniumConfig.close_driver(self.driver)
 
     def get_player_url(player_name: str):
         # Splits player name into first and last name
@@ -45,10 +22,10 @@ class SeleniumScraper:
         # [-1] grabs last item in list, [0] grabs first item in list
         last_name, first_name = name_parts[-1], name_parts[0]
         # [:1] grabs first letter of last name, [:5] grabs first 5 letters of last name, [:2] grabs first 2 letters of first name
-        main_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01.html"
-        splits_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/splits/2025" # TODO: Make way to get current year
-        gamelog_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/gamelog/2025"
-        advanced_gamelog_player_url = f"https://www.basketball-reference.com/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/gamelog-advanced/2025"
+        main_player_url = f"{ScraperConstants.BASE_URL}/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01.html"
+        splits_player_url = f"{ScraperConstants.BASE_URL}/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/splits/2025" # TODO: Make way to get current year
+        gamelog_player_url = f"{ScraperConstants.BASE_URL}/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/gamelog/2025"
+        advanced_gamelog_player_url = f"{ScraperConstants.BASE_URL}/players/{last_name[:1]}/{last_name[:5]}{first_name[:2]}01/gamelog-advanced/2025"
         
         return main_player_url, splits_player_url, gamelog_player_url, advanced_gamelog_player_url
 
@@ -59,7 +36,7 @@ class SeleniumScraper:
             self.driver.set_page_load_timeout(10)
             self.driver.get(main_player_url)
             # Finds the opposing team key
-            opposing_team_key = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#tfooter_last5 a")))
+            opposing_team_key = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['OPPOSING_TEAM'])))
             
         except Exception as e:
             print(f"Error getting opposing team: {str(e)}")
@@ -73,9 +50,9 @@ class SeleniumScraper:
             # Loads the gamelog player url
             self.driver.get(gamelog_player_url)
             # Finds the table
-            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#pgl_basic")))
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['GAME_TABLE'])))
             # Finds the last 5 rows while excluding the headers
-            rows = table.find_elements(By.CSS_SELECTOR, "tbody tr:not(.thead)")[-5:] 
+            rows = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['LAST_FIVE_ROWS'])[-5:] 
             
             # Creates a list to store the last 5 game stats
             last_five_game_stats = []
