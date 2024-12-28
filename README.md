@@ -30,11 +30,18 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Added Selenium scraper and test scraper to move to a more dynamic scraping method. Learned a lot about how to use Selenium to scrape data from a website but it's not working as well as I'd like. Next update will be a better attempt at scraping the data with selenium.
 - Ended up putting todays Selenium work in a archive folder to keep the project clean and to reference it later.
 
-12/24/24 :
+- 12/24/2024 :
 - Reworked the playerInfo.py file to get the best data to use for prop bets
 
-12/26/2024:
+- 12/26/2024:
 - Started work on a Selenium scraper in place of the BS4 Scraper
+
+- 12/27/2024:
+- Added rest of the playerInfo.py file to the seleniumScraper.py file as well as the advanced gamelog data
+- Made a new class in playerInfo.py to store the last 5 game stats and display the individual game stats
+- Added utilities folder
+- Added timeConverter.py file to convert the time from float to string
+- Added nameFormat.py file to format the player name
 
 ---
 © 2024 Joshua Gould. All rights reserved.

@@ -85,36 +85,80 @@ class PlayerInfo(BaseModel):
     position: str #(per game log - seasonal)
     age: int #(per game log - seasonal)
     experience: int #(top of page)
-    days_since_last_game: int #(advanced game log (might be better way))
+    days_since_last_game: int #(advanced game log (might be better way))]
     
-class PlayerLastFiveGameStats(BaseModel):
-    # https://www.basketball-reference.com/players/j/jamesle01.html
-    average_minutes_played: float
-    average_field_goals: float
-    average_field_goals_attempted: float
-    average_field_goal_percentage: float
-    average_three_points: float
-    average_three_points_attempted: float
-    average_three_point_percentage: float
-    average_free_throws: float
-    average_free_throws_attempted: float
-    average_free_throw_percentage: float
-    average_offensive_rebounds: float
-    average_defensive_rebounds: float
-    average_total_rebounds: float
-    average_assists: float
-    average_steals: float
-    average_blocks: float
-    average_turnovers: float
-    average_points: float
-    average_game_score: float
-    average_plusminus: float
-        # https://www.basketball-reference.com/players/j/jamesle01/gamelog-advanced/2025
+class PlayerIndividualFiveGameStats(BaseModel):
+    player_name: str
+    opponent: str
+    is_away: bool
+    minutes_played: float
+    
+    field_goals: int
+    field_goal_attempts: int
+    field_goal_percentage: float
+    
+    three_points: int
+    three_point_attempts: int
+    three_point_percentage: float
+    
+    free_throws: int
+    free_throw_attempts: int
+    free_throw_percentage: float
+        
+    offensive_rebounds: int
+    defensive_rebounds: int
+    total_rebounds: int
+        
+    assists: int
+    steals: int
+    blocks: int
+    turnovers: int
+    
+    points: int
+    game_score: float
+    plusminus: int
+    
     true_shooting_percentage: float
     effective_field_goal_percentage: float
     usage_percentage: float
     offensive_rating: float
     defensive_rating: float
+        
+class PlayerLastFiveGameStats(BaseModel):
+    # https://www.basketball-reference.com/players/j/jamesle01.html
+    average_minutes_played: float
+    
+    average_field_goals: float
+    average_field_goal_attempts: float
+    average_field_goal_percentage: float
+    
+    average_three_points: float
+    average_three_point_attempts: float
+    average_three_point_percentage: float
+    
+    average_free_throws: float
+    average_free_throw_attempts: float
+    average_free_throw_percentage: float
+    
+    average_offensive_rebounds: float
+    average_defensive_rebounds: float
+    average_total_rebounds: float
+    
+    average_assists: float
+    average_steals: float
+    average_blocks: float
+    average_turnovers: float
+
+    average_points: float
+    average_game_score: float
+    average_plusminus: float
+        # https://www.basketball-reference.com/players/j/jamesle01/gamelog-advanced/2025
+    average_true_shooting_percentage: float
+    average_effective_field_goal_percentage: float
+    average_usage_percentage: float
+    average_offensive_rating: float
+    average_defensive_rating: float
+    
     
 class PlayerCurrentSeasonStats(BaseModel):
     games_played: int
