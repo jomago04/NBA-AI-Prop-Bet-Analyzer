@@ -133,7 +133,123 @@ class SeleniumScraper:
         except Exception as e:
             print(f"Error retrieving advanced game stats: {str(e)}")
             return []
+    
+    def getPlayerCurrentSeasonTotalStats(self, splitsMainPlayerUrl: str):
+        try:
+            self.driver.get(splitsMainPlayerUrl)
+            print(f"Accessing URL: {splitsMainPlayerUrl}")
+            
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_TABLE'])))
+            seasonalRow = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_ROWS'])[0]
+            
+            cells = seasonalRow.find_elements(By.TAG_NAME, 'td' )
+            
+            currentSeasonTotalStats = {
+                'gamesPlayed': int(cells[1].text),
+                'gamesStarted': int(cells[2].text),
+                'gamesStartedPercentage': float(cells[1] / cells[2]) * 100,
+                
+                'minutesPlayed': float(cells[3].text),
+                
+                'fieldGoals': float(cells[4].text),
+                'fieldGoalAttempts': float(cells[5].text),
+                'fieldGoalPercentage': float(cells[4].text / cells[5].text) * 100,
+                
+                'threePoints': float(cells[6].text),
+                'threePointAttempts': float(cells[7].text),
+                'threePointPercentage': float(cells[6].text / cells[7].text) * 100,
+                
+                'freeThrows': float(cells[8].text),
+                'freeThrowAttempts': float(cells[9].text),
+                'freeThrowPercentage': float(cells[8].text / cells[9].text) * 100,
+                
+                'offensiveRebounds': float(cells[10].text),
+                'defensiveRebounds': float(cells[11].text - cells[10].text),
+                'totalRebounds': float(cells[11].text),
+                
+                'assists': float(cells[12].text),
+                'steals': float(cells[13].text),
+                'blocks': float(cells[14].text),
+                'turnovers': float(cells[15].text),
+                
+                'personalFouls': float(cells[16].text),
+                'points': float(cells[17].text),
+            }
+            
+            currentSeasonAverageStats = { 
+                'averageTrueShootingPercentage': float(cells[23].text) * 100,
+                'averageUsagePercentage': float(cells[24].text),
+                'averageOffensiveRating': float(cells[25].text),
+                'averageDefensiveRating': float(cells[26].text),
+                'averagePlusMinus': float(cells[27].text)
+            }
+            
+            return currentSeasonTotalStats, currentSeasonAverageStats
         
+        except Exception as e:
+            print(f"Error retrieving current season total stats: {str(e)}")
+            return {}
+        
+        
+    def getPlayerCurrentSeasonAverageStats(self, splitsMainPlayerUrl: str):
+        try:
+            self.driver.get(splitsMainPlayerUrl)
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_TABLE'])))
+            seasonalRow = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_ROWS'])[-1]
+            
+            cells = seasonalRow.find_elements(By.TAG_NAME, 'td' )
+            
+            currentSeasonAverageStats = {
+                'averageGamesPlayed': float(cells[4].text),
+                'averageGamesStarted': float(cells[5].text),
+                'averageGamesStartedPercentage': float(cells[4] / cells[5]) * 100,
+                
+                'averageMinutesPlayed': float(cells[6].text),
+                
+                'averageFieldGoals': float(cells[7].text),
+                'averageFieldGoalAttempts': float(cells[8].text),
+                'averageFieldGoalPercentage': float(cells[7].text / cells[8].text) * 100,
+                
+                'averageThreePoints': float(cells[10].text),
+                'averageThreePointAttempts': float(cells[11].text),
+                'averageThreePointPercentage': float(cells[10].text / cells[11].text) * 100,
+                
+                'averageTwoPoints': float(cells[13].text),
+                'averageTwoPointsAttempts': float(cells[14].text),
+                'averageTwoPointPercentage': float(cells[13].text / cells[14].text) * 100,
+                
+                'averageEffectiveFieldGoalPercentage': float(cells[17].text) * 100,
+                
+                'averageFreeThrows': float(cells[18].text),
+                'averageFreeThrowAttempts': float(cells[19].text),
+                'averageFreeThrowPercentage': float(cells[18].text / cells[19].text) * 100,
+                
+                'averageOffensiveRebounds': float(cells[20].text),
+                'averageDefensiveRebounds': float(cells[21].text),
+                'averageTotalRebounds': float(cells[22].text),
+                
+                'averageAssists': float(cells[23].text),
+                'averageSteals': float(cells[24].text),
+                'averageBlocks': float(cells[25].text),
+                'averageTurnovers': float(cells[26].text),
+                
+                'averagePoints': float(cells[27].text),
+            }
+            return currentSeasonAverageStats
+        
+        except Exception as e:
+            print(f"Error retrieving current season average stats: {str(e)}")
+            return {}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     def calculatePlayerFiveGameAverages(self, lastFiveGameStats: list, advancedFiveGameStats: list):
         # Checks if the last 5 game stats is empty
         if not lastFiveGameStats:

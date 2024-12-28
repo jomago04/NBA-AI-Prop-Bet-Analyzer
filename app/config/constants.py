@@ -4,6 +4,10 @@ class ScraperConstants:
         'GAME_TABLE': "#pgl_basic",
         'ADVANCED_TABLE': "#pgl_advanced",
         'LAST_FIVE_ROWS': "tbody tr:not(.thead)",
-        'OPPOSING_TEAM': "#tfooter_last5 a"
+        'OPPOSING_TEAM': "#tfooter_last5 a",
+        'CURRENT_SEASON_TABLE': "#per_game_stats",
+        'CURRENT_SEASON_ROWS': "tbody tr:not(.thead)"
     }
+    
+
     

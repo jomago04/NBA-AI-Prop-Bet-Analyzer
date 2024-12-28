@@ -1,5 +1,5 @@
 from app.services.seleniumScraper import SeleniumScraper
-from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats
+from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats
 from app.utilities.timeConverter import TimeConverter
 
 def testScraper(playerName):
@@ -73,6 +73,9 @@ def testScraper(playerName):
         print(f"Average Usage %: {playerAverages.averageUsagePercentage:.1f}%")
         print(f"Average Offensive Rating: {playerAverages.averageOffensiveRating:.1f}")
         print(f"Average Defensive Rating: {playerAverages.averageDefensiveRating:.1f}")
+        
+        currentSeasonTotalStats = scraper.getPlayerCurrentSeasonTotalStats(splitsUrl)
+        currentSeasonAverages = scraper.getPlayerCurrentSeasonAverageStats(splitsUrl)
      
     except Exception as e:
         print(f"Error during scraping: {str(e)}")
@@ -83,4 +86,4 @@ def testScraper(playerName):
 if __name__ == "__main__":
     #playerName = input("Enter player name: ")
     playerName = "LeBron James"
-    testScraper(playerName) 
+    testScraper(playerName)

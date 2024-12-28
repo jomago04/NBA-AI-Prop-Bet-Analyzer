@@ -85,7 +85,7 @@ class PlayerInfo(BaseModel):
     position: str #(per game log - seasonal)
     age: int #(per game log - seasonal)
     experience: int #(top of page)
-    days_since_last_game: int #(advanced game log (might be better way))]
+    daysSinceLastGame: int #(advanced game log (might be better way))]
     
 class PlayerIndividualFiveGameStats(BaseModel):
     playerName: str
@@ -160,94 +160,126 @@ class PlayerLastFiveGameStats(BaseModel):
     averageDefensiveRating: float
     
     
-class PlayerCurrentSeasonStats(BaseModel):
-    games_played: int
-    games_started: int
-    games_started_percentage: float
-    field_goals: float
-    field_goals_attempted: float
-    field_goal_percentage: float
-    three_points: float
-    three_points_attempted: float
-    three_point_percentage: float
-    free_throws: float
-    free_throws_attempted: float
-    free_throw_percentage: float
-    offensive_rebounds: float
-    defensive_rebounds: float
-    total_rebounds: float
+class PlayerCurrentSeasonTotalStats(BaseModel):
+    fieldGoals: float
+    fieldGoalAttempts: float
+    fieldGoalPercentage: float
+    
+    threePoints: float
+    threePointAttempts: float
+    threePointPercentage: float
+    
+    freeThrows: float
+    freeThrowAttempts: float
+    freeThrowPercentage: float  
+    
+    offensiveRebounds: float
+    defensiveRebounds: float
+    totalRebounds: float
+    
     assists: float
     steals: float
     blocks: float
-    turnovers: float
+    turnovers: float    
+    
+    personalFouls: float
     points: float
-    true_shooting_percentage: float
-    usage_percentage: float
-    offensive_rating: float
-    defensive_rating: float
-    plusminus: float
-    average_minutes_played: float
-    average_points: float
-    average_total_rebounds: float
-    average_assists: float
+    
+class PlayerCurrentSeasonAverageStats(BaseModel):
+    averageMinutesPlayed: float
+    
+    averageFieldGoals: float
+    averageFieldGoalAttempts: float
+    averageFieldGoalPercentage: float
+    
+    averageThreePoints: float
+    averageThreePointAttempts: float
+    averageThreePointPercentage: float   
+    
+    averageTwoPoints: float
+    averageTwoPointsAttempts: float
+    averageTwoPointPercentage: float
+    
+    averageEffectiveFieldGoalPercentage: float
+    
+    averageFreeThrows: float
+    averageFreeThrowAttempts: float
+    averageFreeThrowPercentage: float
+    
+    averageOffensiveRebounds: float
+    averageDefensiveRebounds: float
+    averageTotalRebounds: float
+    
+    averageAssists: float
+    averageSteals: float
+    averageBlocks: float
+    averageTurnovers: float 
+    
+    averagePoints: float
+    
+    averageTrueShootingPercentage: float
+    averageUsagePercentage: float
+    averageOffensiveRating: float
+    averageDefensiveRating: float
+    averagePlusMinus: float
     
 class PlayerOpposingTeamStats(BaseModel):
-    opponent_team_name: str
-    opponent_wins: int
-    opponent_losses: int
-    opponent_win_percentage: float
-    opponent_field_goals: float
-    opponent_field_goals_attempted: float
-    opponent_field_goal_ratio: float
-    opponent_three_points: float
-    opponent_three_points_attempted: float
-    opponent_three_point_ratio: float
-    opponent_two_points: float
-    opponent_two_points_attempted: float
-    opponent_two_point_ratio: float
-    opponent_free_throws: float
-    opponent_free_throws_attempted: float
-    opponent_free_throw_ratio: float
-    opponent_offensive_rebounds: float
-    opponent_defensive_rebounds: float
-    opponent_average_assists: float
-    opponent_average_steals: float
-    opponent_average_blocks: float
-    opponent_average_turnovers: float
-    opponent_average_points: float
-    opponent_offensive_rating: float
-    opponent_defensive_rating: float
-    opponent_pace_factor: float
-    opponent_free_throw_rate: float
-    opponent_three_point_rate: float
-    opponent_effective_field_goal_percentage: float
-    opponent_turnover_percentage: float
-    opponent_offensive_rebound_percentage: float
-    opponent_free_throw_rate: float
+    opponentTeamName: str
+    opponentWins: int
+    opponentLosses: int
+    opponentWinPercentage: float
+    opponentFieldGoals: float
+    opponentFieldGoalsAttempted: float
+    opponentFieldGoalRatio: float
+    opponentThreePoints: float
+    opponentThreePointsAttempted: float
+    opponentThreePointRatio: float
+    opponentTwoPoints: float
+    opponentTwoPointsAttempted: float
+    opponentTwoPointRatio: float
+    opponentFreeThrows: float
+    opponentFreeThrowsAttempted: float
+    opponentFreeThrowRatio: float
+    opponentOffensiveRebounds: float
+    opponentDefensiveRebounds: float
+    opponentAverageAssists: float
+    opponentAverageSteals: float
+    opponentAverageBlocks: float
+    opponentAverageTurnovers: float
+    opponentAveragePoints: float
+    opponentOffensiveRating: float
+    opponentDefensiveRating: float
+    opponentPaceFactor: float
+    opponentFreeThrowRate: float
+    opponentThreePointRate: float
+    opponentEffectiveFieldGoalPercentage: float
+    opponentTurnoverPercentage: float
+    opponentOffensiveReboundPercentage: float
+    opponentFreeThrowRate: float
     #HOW OTHER TEAMS PLAY AGAINST OPPONENT
-    opponent_opponent_field_goals: float
-    opponent_opponent_field_goals_attempted: float
-    opponent_opponent_field_goal_ratio: float
-    opponent_opponent_three_points: float
-    opponent_opponent_three_points_attempted: float
-    opponent_opponent_three_point_ratio: float
-    opponent_opponent_two_points: float
-    opponent_opponent_two_points_attempted: float
-    opponent_opponent_two_point_ratio: float
-    opponent_opponent_free_throws: float
-    opponent_opponent_free_throws_attempted: float
-    opponent_opponent_free_throw_ratio: float
-    opponent_opponent_offensive_rebounds: float
-    opponent_opponent_defensive_rebounds: float
-    opponent_opponent_average_assists: float
-    opponent_opponent_average_steals: float
-    opponent_opponent_average_blocks: float
-    opponent_opponent_average_turnovers: float
+    opponentOpponentFieldGoals: float
+    opponentOpponentFieldGoalsAttempted: float
+    opponentOpponentFieldGoalRatio: float
+    opponentOpponentThreePoints: float
+    opponentOpponentThreePointsAttempted: float
+    opponentOpponentThreePointRatio: float
+    opponentOpponentTwoPoints: float
+    opponentOpponentTwoPointsAttempted: float
+    opponentOpponentTwoPointRatio: float
+    opponentOpponentFreeThrows: float
+    opponentOpponentFreeThrowsAttempted: float
+    opponentOpponentFreeThrowRatio: float
+    opponentOpponentOffensiveRebounds: float
+    opponentOpponentDefensiveRebounds: float
+    opponentOpponentAverageAssists: float
+    opponentOpponentAverageSteals: float
+    opponentOpponentAverageBlocks: float
+    opponentOpponentAverageTurnovers: float
     #DEFENSIVE FOUR FACTORS
-    opponent_opponent_effective_field_goal_percentage: float
-    opponent_opponent_turnover_percentage: float
-    opponent_opponent_defensive_rebound_percentage: float
-    opponent_opponent_free_throw_rate: float
+    opponentOpponentEffectiveFieldGoalPercentage: float
+    opponentOpponentTurnoverPercentage: float
+    opponentOpponentDefensiveReboundPercentage: float
+    opponentOpponentFreeThrowRate: float
 
 
 
