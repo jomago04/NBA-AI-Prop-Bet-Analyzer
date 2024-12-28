@@ -8,10 +8,10 @@ from app.config.constants import ScraperConstants
 class SeleniumScraper:
     # Initializes the scraper on run
     def __init__(self):
-        self.driver, self.init = SeleniumConfig.initialize_driver()
+        self.driver, self.wait = SeleniumConfig.initialize_driver()
         
     def __del__(self):
-        SeleniumConfig.close_driver(self.driver)
+        SeleniumConfig.cleanup_driver(self.driver)
 
     def get_player_url(player_name: str):
         # Splits player name into first and last name

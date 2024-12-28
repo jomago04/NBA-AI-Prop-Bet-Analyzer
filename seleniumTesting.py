@@ -83,4 +83,4 @@ def test_scraper(player_name):
 if __name__ == "__main__":
     #player_name = input("Enter player name: ")
     player_name = "LeBron James"
-    test_scraper(player_name)
+    test_scraper(player_name) 
