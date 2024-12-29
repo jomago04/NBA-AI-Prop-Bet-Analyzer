@@ -161,6 +161,12 @@ class PlayerLastFiveGameStats(BaseModel):
     
     
 class PlayerCurrentSeasonTotalStats(BaseModel):
+    gamesPlayed: int
+    gamesStarted: int
+    gamesStartedPercentage: float
+    
+    minutesPlayed: float
+    
     fieldGoals: float
     fieldGoalAttempts: float
     fieldGoalPercentage: float
@@ -185,7 +191,16 @@ class PlayerCurrentSeasonTotalStats(BaseModel):
     personalFouls: float
     points: float
     
+    averageTrueShootingPercentage: float
+    averageUsagePercentage: float
+    averageOffensiveRating: float
+    averageDefensiveRating: float
+    
 class PlayerCurrentSeasonAverageStats(BaseModel):
+    averageGamesPlayed: float
+    averageGamesStarted: float
+    averageGamesStartedPercentage: float
+    
     averageMinutesPlayed: float
     
     averageFieldGoals: float
@@ -216,12 +231,6 @@ class PlayerCurrentSeasonAverageStats(BaseModel):
     averageTurnovers: float 
     
     averagePoints: float
-    
-    averageTrueShootingPercentage: float
-    averageUsagePercentage: float
-    averageOffensiveRating: float
-    averageDefensiveRating: float
-    averagePlusMinus: float
     
 class PlayerOpposingTeamStats(BaseModel):
     opponentTeamName: str

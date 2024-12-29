@@ -43,5 +43,10 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Added timeConverter.py file to convert the time from float to string
 - Added nameFormat.py file to format the player name
 
+- 12/29/2024:
+- Finished work on the seasonal selenium scraping with a few tweaks needed
+- Need to get player info and opposing team stats working
+- Need to make a better way to load pages needed once so we grab all data on one load per page
+
 ---
 © 2024 Joshua Gould. All rights reserved.

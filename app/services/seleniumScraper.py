@@ -12,7 +12,7 @@ class SeleniumScraper:
         
     def __del__(self):
         SeleniumConfig.cleanup_driver(self.driver)
-
+    # Gets all necessary urls for the player
     def getPlayerUrl(playerName: str):
         # Splits player name into first and last name
         nameParts = NameFormat.getNameParts(playerName)
@@ -29,6 +29,11 @@ class SeleniumScraper:
         
         return mainPlayerUrl, splitsPlayerUrl, gamelogPlayerUrl, advancedGamelogPlayerUrl
 
+ #FOR ALL FUNCTIONS THAT USE URLS, need to find a way to load pages only once so we can get all data on one load per page
+    #this can be done by making functions that load the pages and call them before scraping the data
+    #for example, 1. run player urls, 2. run main url, then run all functions that use main url, 3. run splits url, then run all functions that use splits url,.....
+    # Gets the opposing team URL from the main player url (need to better optimize for loading pages only when needed)
+    
     def getOpposingTeamUrl(self, mainPlayerUrl: str):
         # Gets the opposing team from the main player url
         try:
@@ -43,7 +48,6 @@ class SeleniumScraper:
             return None
         
         return opposingTeamKey.text
-    
     
     def getPlayerFiveGameStats(self, gamelogPlayerUrl: str, playerName: str):
         try:
@@ -134,37 +138,36 @@ class SeleniumScraper:
             print(f"Error retrieving advanced game stats: {str(e)}")
             return []
     
-    def getPlayerCurrentSeasonTotalStats(self, splitsMainPlayerUrl: str):
+    def getPlayerCurrentSeasonTotalStats(self, splitsPlayerUrl: str):
         try:
-            self.driver.get(splitsMainPlayerUrl)
-            print(f"Accessing URL: {splitsMainPlayerUrl}")
+            self.driver.get(splitsPlayerUrl)
             
-            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_TABLE'])))
-            seasonalRow = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_ROWS'])[0]
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#splits')))
             
-            cells = seasonalRow.find_elements(By.TAG_NAME, 'td' )
+            seasonalRow = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[0]
+            cells = seasonalRow.find_elements(By.TAG_NAME, 'td')
             
             currentSeasonTotalStats = {
                 'gamesPlayed': int(cells[1].text),
                 'gamesStarted': int(cells[2].text),
-                'gamesStartedPercentage': float(cells[1] / cells[2]) * 100,
+                'gamesStartedPercentage': float(int(cells[1].text) / int(cells[2].text)) * 100,
                 
                 'minutesPlayed': float(cells[3].text),
                 
                 'fieldGoals': float(cells[4].text),
                 'fieldGoalAttempts': float(cells[5].text),
-                'fieldGoalPercentage': float(cells[4].text / cells[5].text) * 100,
+                'fieldGoalPercentage': float(int(cells[4].text) / int(cells[5].text)) * 100,
                 
                 'threePoints': float(cells[6].text),
                 'threePointAttempts': float(cells[7].text),
-                'threePointPercentage': float(cells[6].text / cells[7].text) * 100,
+                'threePointPercentage': float(int(cells[6].text) / int(cells[7].text)) * 100,
                 
                 'freeThrows': float(cells[8].text),
                 'freeThrowAttempts': float(cells[9].text),
-                'freeThrowPercentage': float(cells[8].text / cells[9].text) * 100,
+                'freeThrowPercentage': float(int(cells[8].text) / int(cells[9].text)) * 100,
                 
                 'offensiveRebounds': float(cells[10].text),
-                'defensiveRebounds': float(cells[11].text - cells[10].text),
+                'defensiveRebounds': float(float(cells[11].text) - float(cells[10].text)),
                 'totalRebounds': float(cells[11].text),
                 
                 'assists': float(cells[12].text),
@@ -174,55 +177,51 @@ class SeleniumScraper:
                 
                 'personalFouls': float(cells[16].text),
                 'points': float(cells[17].text),
-            }
-            
-            currentSeasonAverageStats = { 
                 'averageTrueShootingPercentage': float(cells[23].text) * 100,
                 'averageUsagePercentage': float(cells[24].text),
                 'averageOffensiveRating': float(cells[25].text),
-                'averageDefensiveRating': float(cells[26].text),
-                'averagePlusMinus': float(cells[27].text)
+                'averageDefensiveRating': float(cells[26].text)   
             }
+
             
-            return currentSeasonTotalStats, currentSeasonAverageStats
+            return currentSeasonTotalStats
         
         except Exception as e:
             print(f"Error retrieving current season total stats: {str(e)}")
             return {}
-        
-        
-    def getPlayerCurrentSeasonAverageStats(self, splitsMainPlayerUrl: str):
-        try:
-            self.driver.get(splitsMainPlayerUrl)
-            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_TABLE'])))
-            seasonalRow = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['CURRENT_SEASON_ROWS'])[-1]
             
+    def getPlayerCurrentSeasonAverageStats(self, mainPlayerUrl: str):
+        try:
+            self.driver.get(mainPlayerUrl)
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#per_game_stats')))
+            
+            seasonalRow = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[-1]
             cells = seasonalRow.find_elements(By.TAG_NAME, 'td' )
             
             currentSeasonAverageStats = {
                 'averageGamesPlayed': float(cells[4].text),
                 'averageGamesStarted': float(cells[5].text),
-                'averageGamesStartedPercentage': float(cells[4] / cells[5]) * 100,
+                'averageGamesStartedPercentage': float(float(cells[4].text) / float(cells[5].text)) * 100,
                 
                 'averageMinutesPlayed': float(cells[6].text),
                 
                 'averageFieldGoals': float(cells[7].text),
                 'averageFieldGoalAttempts': float(cells[8].text),
-                'averageFieldGoalPercentage': float(cells[7].text / cells[8].text) * 100,
+                'averageFieldGoalPercentage': float(float(cells[7].text) / float(cells[8].text)) * 100,
                 
                 'averageThreePoints': float(cells[10].text),
                 'averageThreePointAttempts': float(cells[11].text),
-                'averageThreePointPercentage': float(cells[10].text / cells[11].text) * 100,
+                'averageThreePointPercentage': float(float(cells[10].text) / float(cells[11].text)) * 100,
                 
                 'averageTwoPoints': float(cells[13].text),
                 'averageTwoPointsAttempts': float(cells[14].text),
-                'averageTwoPointPercentage': float(cells[13].text / cells[14].text) * 100,
+                'averageTwoPointPercentage': float(float(cells[13].text) / float(cells[14].text)) * 100,
                 
                 'averageEffectiveFieldGoalPercentage': float(cells[17].text) * 100,
                 
                 'averageFreeThrows': float(cells[18].text),
                 'averageFreeThrowAttempts': float(cells[19].text),
-                'averageFreeThrowPercentage': float(cells[18].text / cells[19].text) * 100,
+                'averageFreeThrowPercentage': float(float(cells[18].text) / float(cells[19].text)) * 100,
                 
                 'averageOffensiveRebounds': float(cells[20].text),
                 'averageDefensiveRebounds': float(cells[21].text),
@@ -240,17 +239,8 @@ class SeleniumScraper:
         except Exception as e:
             print(f"Error retrieving current season average stats: {str(e)}")
             return {}
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    def calculatePlayerFiveGameAverages(self, lastFiveGameStats: list, advancedFiveGameStats: list):
+      
+    def calculatePlayerFiveGameAverages(lastFiveGameStats: list, advancedFiveGameStats: list):
         # Checks if the last 5 game stats is empty
         if not lastFiveGameStats:
             return {
@@ -328,5 +318,3 @@ class SeleniumScraper:
         }
         
         return averages
-        
-
