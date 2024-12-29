@@ -1,11 +1,11 @@
 from app.services.seleniumScraper import SeleniumScraper
 from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats
 from app.utilities.timeConverter import TimeConverter
-
-"""def testScraper(playerName):
-    # Initialize scraper
+from app.utilities.urlLoaders import UrlLoaders
+import time
+        
+def testScraper(playerName):
     scraper = SeleniumScraper()
-    
     try:
         # Test 1: Get player URLs
         print("\n=== Testing Player URL Generation ===")
@@ -14,18 +14,56 @@ from app.utilities.timeConverter import TimeConverter
         print(f"Splits URL: {splitsUrl}")
         print(f"Gamelog URL: {gamelogUrl}")
         print(f"Advanced Gamelog URL: {advancedGamelogUrl}")
-
-        playerStats = scraper.getPlayerFiveGameStats(gamelogUrl, playerName)
-        advancedPlayerStats = scraper.getPlayerAdvancedFiveGameStats(advancedGamelogUrl)
         
-        combinedStats = []
-        for default, advanced in zip(playerStats, advancedPlayerStats):
-            combineStats = default.copy()
-            combineStats.update(advanced)
-            combinedStats.append(combineStats)
-            
+        urlLoaders = UrlLoaders(scraper.driver)
+        print("Scraping player stats...")
+        # MAIN URL TASKS
+        urlLoaders.loadMainUrl(mainUrl)
+        # gets opposing team url
+        opposingTeamUrl = scraper.getOpposingTeamUrl()
+        
+        # gets current season average stats
+        currentSeasonAverageStats = scraper.getPlayerCurrentSeasonAverageStats()
+        if not currentSeasonAverageStats:
+            print("No data returned for current season average stats.")
+            return
+        
+        averageStats = PlayerCurrentSeasonAverageStats(**currentSeasonAverageStats)
+        
+        # SPLITS URL TASKS
+        urlLoaders.loadSplitsUrl(splitsUrl)
+        # gets current season total stats
+        currentSeasonTotalStats = scraper.getPlayerCurrentSeasonTotalStats()
+        if not currentSeasonTotalStats:
+            print("No data returned for current season total stats.")
+            return
+        
+        totalStats = PlayerCurrentSeasonTotalStats(**currentSeasonTotalStats) 
+        
+        # GAMELOG URL TASKS
+        urlLoaders.loadGamelogUrl(gamelogUrl)
+        # gets player stats for last 5 games
+        playerFiveGameStats = scraper.getPlayerFiveGameStats(playerName)
+
+        # ADVANCED GAMELOG URL TASKS
+        urlLoaders.loadAdvancedGamelogUrl(advancedGamelogUrl)
+        # gets advanced player stats for last 5 games
+        advancedPlayerFiveGameStats = scraper.getPlayerAdvancedFiveGameStats()
+        
+        # COMBINING STATS (for last 5 games)
+        combinedStats = [
+            {**default, **advanced} for default, advanced in zip(playerFiveGameStats, advancedPlayerFiveGameStats)
+        ]
+        
         individualGames = [PlayerIndividualFiveGameStats(**game) for game in combinedStats]
             
+        print("scraping complete")
+        
+        time.sleep(2)
+        
+        ### DISPLAYING STATS ###        
+        print("\n=== Testing Opposing Team URL ===")
+        print(f"Opposing Team URL: {opposingTeamUrl}")
         print("\n=== Individual Game Stats ===")
         for i, game in enumerate(individualGames, 1):
             
@@ -49,9 +87,9 @@ from app.utilities.timeConverter import TimeConverter
             print(f"Usage %: {game.usagePercentage:.1f}%")
             print(f"Offensive Rating: {game.offensiveRating:.1f}")
             print(f"Defensive Rating: {game.defensiveRating:.1f}")
-        
-        # Calculate averages
-        averages = scraper.calculatePlayerFiveGameAverages(playerStats, advancedPlayerStats)
+            
+                    # Calculate averages
+        averages = scraper.calculatePlayerFiveGameAverages(playerFiveGameStats, advancedPlayerFiveGameStats)
         playerAverages = PlayerLastFiveGameStats(**averages)
         
         # Display averages
@@ -74,35 +112,6 @@ from app.utilities.timeConverter import TimeConverter
         print(f"Average Offensive Rating: {playerAverages.averageOffensiveRating:.1f}")
         print(f"Average Defensive Rating: {playerAverages.averageDefensiveRating:.1f}")
         
-        currentSeasonTotalStats = scraper.getPlayerCurrentSeasonTotalStats(splitsUrl)
-        currentSeasonAverages = scraper.getPlayerCurrentSeasonAverageStats(splitsUrl)
-        
-        
-     
-    except Exception as e:
-        print(f"Error during scraping: {str(e)}")
-    finally:
-        # Clean up
-        scraper.driver.quit()"""
-        
-def testScraper(playerName):
-    scraper = SeleniumScraper()
-    try:
-        # Test 1: Get player URLs
-        print("\n=== Testing Player URL Generation ===")
-        mainUrl, splitsUrl, gamelogUrl, advancedGamelogUrl = SeleniumScraper.getPlayerUrl(playerName)
-        print(f"Main URL: {mainUrl}")
-        print(f"Splits URL: {splitsUrl}")
-        print(f"Gamelog URL: {gamelogUrl}")
-        print(f"Advanced Gamelog URL: {advancedGamelogUrl}")
-        
-        # Fetch current season total stats
-        currentSeasonTotalStats = scraper.getPlayerCurrentSeasonTotalStats(splitsUrl)
-        if not currentSeasonTotalStats:
-            print("No data returned for current season total stats.")
-            return
-        
-        totalStats = PlayerCurrentSeasonTotalStats(**currentSeasonTotalStats) 
         print("\n=== Current Season Total Stats ===")
         print(f"Games Played: {totalStats.gamesPlayed}")
         print(f"Games Started: {totalStats.gamesStarted}")
@@ -121,13 +130,6 @@ def testScraper(playerName):
         print(f"Points: {totalStats.points:.1f}")
         print(f"Personal Fouls: {totalStats.personalFouls:.1f}")
         
-        # Fetch current season average stats
-        currentSeasonAverageStats = scraper.getPlayerCurrentSeasonAverageStats(mainUrl)
-        if not currentSeasonAverageStats:
-            print("No data returned for current season average stats.")
-            return
-        
-        averageStats = PlayerCurrentSeasonAverageStats(**currentSeasonAverageStats)
         print("\n=== Current Season Average Stats ===")
         print(f"Average Minutes Played: {averageStats.averageMinutesPlayed:.1f}")
         print(f"Average Field Goals: {averageStats.averageFieldGoals:.1f}/{averageStats.averageFieldGoalAttempts:.1f} ({averageStats.averageFieldGoalPercentage:.1f}%)")
@@ -147,6 +149,7 @@ def testScraper(playerName):
         print(f"Average Usage %: {totalStats.averageUsagePercentage:.1f}%")
         print(f"Average Offensive Rating: {totalStats.averageOffensiveRating:.1f}")
         print(f"Average Defensive Rating: {totalStats.averageDefensiveRating:.1f}")
+        
         
     except Exception as e:
         print(f"Error during scraping: {str(e)}")

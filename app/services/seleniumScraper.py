@@ -4,14 +4,17 @@ from app.utilities.timeConverter import TimeConverter
 from app.utilities.nameFormat import NameFormat
 from app.config.selenium_config import SeleniumConfig
 from app.config.constants import ScraperConstants
-
+from app.utilities.urlLoaders import UrlLoaders
 class SeleniumScraper:
+    
     # Initializes the scraper on run
     def __init__(self):
         self.driver, self.wait = SeleniumConfig.initialize_driver()
+        self.urlLoaders = UrlLoaders(self.driver)
         
     def __del__(self):
         SeleniumConfig.cleanup_driver(self.driver)
+        
     # Gets all necessary urls for the player
     def getPlayerUrl(playerName: str):
         # Splits player name into first and last name
@@ -34,12 +37,10 @@ class SeleniumScraper:
     #for example, 1. run player urls, 2. run main url, then run all functions that use main url, 3. run splits url, then run all functions that use splits url,.....
     # Gets the opposing team URL from the main player url (need to better optimize for loading pages only when needed)
     
-    def getOpposingTeamUrl(self, mainPlayerUrl: str):
+    # USES MAIN URL
+    def getOpposingTeamUrl(self):
         # Gets the opposing team from the main player url
         try:
-            # Loads the main player url
-            self.driver.set_page_load_timeout(10)
-            self.driver.get(mainPlayerUrl)
             # Finds the opposing team key
             opposingTeamKey = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['OPPOSING_TEAM'])))
             
@@ -49,11 +50,9 @@ class SeleniumScraper:
         
         return opposingTeamKey.text
     
-    def getPlayerFiveGameStats(self, gamelogPlayerUrl: str, playerName: str):
+    # USES GAMELOG URL
+    def getPlayerFiveGameStats(self, playerName: str):
         try:
-            # Loads the gamelog player url
-            self.driver.get(gamelogPlayerUrl)
-            # Finds the table
             table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['GAME_TABLE'])))
             # Finds the last 5 rows while excluding the headers
             rows = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['LAST_FIVE_ROWS'])[-5:] 
@@ -112,9 +111,9 @@ class SeleniumScraper:
             print(f"Error retrieving game stats: {str(e)}")
             return []
         
-    def getPlayerAdvancedFiveGameStats(self, advancedGamelogPlayerUrl: str):
+    # USES ADVANCED GAMELOG URL
+    def getPlayerAdvancedFiveGameStats(self):
         try:
-            self.driver.get(advancedGamelogPlayerUrl)
             table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#pgl_advanced")))
             rows = table.find_elements(By.CSS_SELECTOR, "tbody tr:not(.thead)")[-5:]
             
@@ -138,10 +137,9 @@ class SeleniumScraper:
             print(f"Error retrieving advanced game stats: {str(e)}")
             return []
     
-    def getPlayerCurrentSeasonTotalStats(self, splitsPlayerUrl: str):
-        try:
-            self.driver.get(splitsPlayerUrl)
-            
+    # USES SPLITS URL
+    def getPlayerCurrentSeasonTotalStats(self):
+        try: 
             table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#splits')))
             
             seasonalRow = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[0]
@@ -189,10 +187,10 @@ class SeleniumScraper:
         except Exception as e:
             print(f"Error retrieving current season total stats: {str(e)}")
             return {}
-            
-    def getPlayerCurrentSeasonAverageStats(self, mainPlayerUrl: str):
+    
+    # USES MAIN URL
+    def getPlayerCurrentSeasonAverageStats(self):
         try:
-            self.driver.get(mainPlayerUrl)
             table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#per_game_stats')))
             
             seasonalRow = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[-1]
@@ -240,7 +238,7 @@ class SeleniumScraper:
             print(f"Error retrieving current season average stats: {str(e)}")
             return {}
       
-    def calculatePlayerFiveGameAverages(lastFiveGameStats: list, advancedFiveGameStats: list):
+    def calculatePlayerFiveGameAverages(self, lastFiveGameStats: list, advancedFiveGameStats: list):
         # Checks if the last 5 game stats is empty
         if not lastFiveGameStats:
             return {
