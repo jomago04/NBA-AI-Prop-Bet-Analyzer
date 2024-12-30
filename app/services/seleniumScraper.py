@@ -215,11 +215,11 @@ class SeleniumScraper:
                 'averageTwoPointsAttempts': float(cells[14].text),
                 'averageTwoPointPercentage': float(float(cells[13].text) / float(cells[14].text)) * 100,
                 
-                'averageEffectiveFieldGoalPercentage': float(cells[17].text) * 100,
+                'averageEffectiveFieldGoalPercentage': float(cells[16].text) * 100,
                 
-                'averageFreeThrows': float(cells[18].text),
-                'averageFreeThrowAttempts': float(cells[19].text),
-                'averageFreeThrowPercentage': float(float(cells[18].text) / float(cells[19].text)) * 100,
+                'averageFreeThrows': float(cells[17].text),
+                'averageFreeThrowAttempts': float(cells[18].text),
+                'averageFreeThrowPercentage': float(float(cells[17].text) / float(cells[18].text)) * 100,
                 
                 'averageOffensiveRebounds': float(cells[20].text),
                 'averageDefensiveRebounds': float(cells[21].text),

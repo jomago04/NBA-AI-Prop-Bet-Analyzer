@@ -237,20 +237,20 @@ class PlayerOpposingTeamStats(BaseModel):
     opponentWins: int
     opponentLosses: int
     opponentWinPercentage: float
-    opponentFieldGoals: float
-    opponentFieldGoalsAttempted: float
-    opponentFieldGoalRatio: float
-    opponentThreePoints: float
-    opponentThreePointsAttempted: float
-    opponentThreePointRatio: float
-    opponentTwoPoints: float
-    opponentTwoPointsAttempted: float
-    opponentTwoPointRatio: float
-    opponentFreeThrows: float
-    opponentFreeThrowsAttempted: float
-    opponentFreeThrowRatio: float
-    opponentOffensiveRebounds: float
-    opponentDefensiveRebounds: float
+    opponentAverageFieldGoals: float
+    opponentAverageFieldGoalsAttempted: float
+    opponentAverageFieldGoalRatio: float
+    opponentAverageThreePoints: float
+    opponentAverageThreePointsAttempted: float
+    opponentAverageThreePointRatio: float
+    opponentAverageTwoPoints: float
+    opponentAverageTwoPointsAttempted: float
+    opponentAverageTwoPointRatio: float
+    opponentAverageFreeThrows: float
+    opponentAverageFreeThrowAttempts: float
+    opponentAverageFreeThrowRatio: float
+    opponentAverageOffensiveRebounds: float
+    opponentAverageDefensiveRebounds: float
     opponentAverageAssists: float
     opponentAverageSteals: float
     opponentAverageBlocks: float

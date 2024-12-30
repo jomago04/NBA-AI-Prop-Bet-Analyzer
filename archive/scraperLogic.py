@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from app.models.playerInfo import PlayerAverageLastFiveGameStats, PlayerSeasonalStats, PlayerOpposingTeamStats
 
-
+""" this was the original bs4 scraper logic, but it was decided to switch to selenium because it was more reliable and faster """
 # Main class for scraping player data
 class PlayerService:
     
