@@ -5,6 +5,9 @@ from app.utilities.nameFormat import NameFormat
 from app.config.selenium_config import SeleniumConfig
 from app.config.constants import ScraperConstants
 from app.utilities.urlLoaders import UrlLoaders
+from app.utilities.calculateDaysSinceLastGame import calculateDaysSinceLastGame        
+from html import unescape
+
 class SeleniumScraper:
     
     # Initializes the scraper on run
@@ -50,6 +53,51 @@ class SeleniumScraper:
         
         return opposingTeamKey.text
     
+    # USES MAIN URL
+    def getPlayerInfo(self):
+        try: 
+            # Gets the player current position from the seasonal stats table
+            seasonalTable = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#per_game_stats')))
+            seasonalRow = seasonalTable.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[-1]
+            seasonalCells = seasonalRow.find_elements(By.TAG_NAME, 'td' )
+            
+            playerInfo = {
+                'name': '',
+                'age': seasonalCells[0].text,
+                'position': seasonalCells[3].text,
+                'team': '',
+                'daysSinceLastGame': 0
+            }
+            
+            # Gets the player name, team, and experience from the info div
+            div = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div#meta')))
+            
+            # Gets the player name from the only h1 tag
+            h1Name = div.find_element(By.TAG_NAME, 'h1').text
+            playerInfo['name'] = h1Name
+            
+            # Gets all the p tags in the info div
+            pTags = div.find_elements(By.TAG_NAME, 'p')
+
+            # Loops through the p tags and adds only the team and experience to the playerInfo dictionary
+            for p in pTags:
+                print(p.text)
+                if 'Team:' in p.text:
+                    playerInfo['team'] = p.text.split(':')[1].strip()
+            
+            # Gets the days since last game from the last 5 games table
+            fiveGameTable = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#last5')))
+            fiveGameRow = fiveGameTable.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[0]
+            dateCell = fiveGameRow.find_elements(By.TAG_NAME, 'th')[0].text
+            
+            playerInfo['daysSinceLastGame'] = calculateDaysSinceLastGame(dateCell)
+            
+            return playerInfo   
+        
+        except Exception as e:
+            print(f"Error getting player info: {str(e)}")
+            return {}
+        
     # USES GAMELOG URL
     def getPlayerFiveGameStats(self, playerName: str):
         try:

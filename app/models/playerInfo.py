@@ -84,7 +84,6 @@ class PlayerInfo(BaseModel):
     team: str #(top of page)
     position: str #(per game log - seasonal)
     age: int #(per game log - seasonal)
-    experience: int #(top of page)
     daysSinceLastGame: int #(advanced game log (might be better way))]
     
 class PlayerIndividualFiveGameStats(BaseModel):

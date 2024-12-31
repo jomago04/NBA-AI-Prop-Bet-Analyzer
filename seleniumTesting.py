@@ -1,5 +1,5 @@
 from app.services.seleniumScraper import SeleniumScraper
-from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats
+from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats, PlayerInfo
 from app.utilities.timeConverter import TimeConverter
 from app.utilities.urlLoaders import UrlLoaders
 import time
@@ -17,7 +17,9 @@ def testScraper(playerName):
         
         urlLoaders = UrlLoaders(scraper.driver)
         print("Scraping player stats...")
-        # MAIN URL TASKS
+        
+        
+        ## MAIN URL TASKS ##
         urlLoaders.loadMainUrl(mainUrl)
         # gets opposing team url
         opposingTeamUrl = scraper.getOpposingTeamUrl()
@@ -27,10 +29,17 @@ def testScraper(playerName):
         if not currentSeasonAverageStats:
             print("No data returned for current season average stats.")
             return
-        
         averageStats = PlayerCurrentSeasonAverageStats(**currentSeasonAverageStats)
         
-        # SPLITS URL TASKS
+        # gets player info
+        playerInfo = scraper.getPlayerInfo()
+        if not playerInfo:
+            print("No data returned for player info.")
+            return
+        playerInfo = PlayerInfo(**playerInfo)
+        
+        
+        ## SPLITS URL TASKS ##
         urlLoaders.loadSplitsUrl(splitsUrl)
         # gets current season total stats
         currentSeasonTotalStats = scraper.getPlayerCurrentSeasonTotalStats()
@@ -45,7 +54,7 @@ def testScraper(playerName):
         # gets player stats for last 5 games
         playerFiveGameStats = scraper.getPlayerFiveGameStats(playerName)
 
-        # ADVANCED GAMELOG URL TASKS
+        ## ADVANCED GAMELOG URL TASKS ##
         urlLoaders.loadAdvancedGamelogUrl(advancedGamelogUrl)
         # gets advanced player stats for last 5 games
         advancedPlayerFiveGameStats = scraper.getPlayerAdvancedFiveGameStats()
@@ -64,6 +73,15 @@ def testScraper(playerName):
         ### DISPLAYING STATS ###        
         print("\n=== Testing Opposing Team URL ===")
         print(f"Opposing Team URL: {opposingTeamUrl}")
+        
+        print("\n=== Player Info ===")
+        print(f"Name: {playerInfo.name}")
+        print(f"Team: {playerInfo.team}")
+        print(f"Position: {playerInfo.position}")
+        print(f"Age: {playerInfo.age}")
+        print(f"Days Since Last Game: {playerInfo.daysSinceLastGame}")
+        
+
         print("\n=== Individual Game Stats ===")
         for i, game in enumerate(individualGames, 1):
             

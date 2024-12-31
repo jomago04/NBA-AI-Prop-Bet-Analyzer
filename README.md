@@ -48,5 +48,8 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Need to get player info and opposing team stats working
 - Need to make a better way to load pages needed once so we grab all data on one load per page
 
+- 12/31/2024:
+- Added scraping for PlayerInfo
+
 ---
 © 2024 Joshua Gould. All rights reserved.
