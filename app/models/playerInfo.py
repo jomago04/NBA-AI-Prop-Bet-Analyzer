@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 
 class PlayerBasicInfo(BaseModel):
     name: str
@@ -236,59 +235,70 @@ class PlayerOpposingTeamStats(BaseModel):
     opponentWins: int
     opponentLosses: int
     opponentWinPercentage: float
+    
     opponentAverageFieldGoals: float
     opponentAverageFieldGoalsAttempted: float
-    opponentAverageFieldGoalRatio: float
+    opponentAverageFieldGoalPercentage: float
+    
     opponentAverageThreePoints: float
     opponentAverageThreePointsAttempted: float
-    opponentAverageThreePointRatio: float
+    opponentAverageThreePointPercentage: float
+    
     opponentAverageTwoPoints: float
     opponentAverageTwoPointsAttempted: float
-    opponentAverageTwoPointRatio: float
+    opponentAverageTwoPointPercentage: float
+    
     opponentAverageFreeThrows: float
     opponentAverageFreeThrowAttempts: float
-    opponentAverageFreeThrowRatio: float
+    opponentAverageFreeThrowPercentage: float
+    
     opponentAverageOffensiveRebounds: float
     opponentAverageDefensiveRebounds: float
+    opponentAverageTotalRebounds: float
+    
     opponentAverageAssists: float
     opponentAverageSteals: float
     opponentAverageBlocks: float
     opponentAverageTurnovers: float
+    
     opponentAveragePoints: float
+    
     opponentOffensiveRating: float
     opponentDefensiveRating: float
     opponentPaceFactor: float
+    
     opponentFreeThrowRate: float
     opponentThreePointRate: float
+    
     opponentEffectiveFieldGoalPercentage: float
     opponentTurnoverPercentage: float
-    opponentOffensiveReboundPercentage: float
+    opponentDefensiveReboundPercentage: float
     opponentFreeThrowRate: float
     #HOW OTHER TEAMS PLAY AGAINST OPPONENT
     opponentOpponentFieldGoals: float
     opponentOpponentFieldGoalsAttempted: float
-    opponentOpponentFieldGoalRatio: float
+    opponentOpponentFieldGoalPercentage: float
+    
     opponentOpponentThreePoints: float
     opponentOpponentThreePointsAttempted: float
-    opponentOpponentThreePointRatio: float
+    opponentOpponentThreePointPercentage: float
+    
     opponentOpponentTwoPoints: float
     opponentOpponentTwoPointsAttempted: float
-    opponentOpponentTwoPointRatio: float
+    opponentOpponentTwoPointPercentage: float
+    
     opponentOpponentFreeThrows: float
     opponentOpponentFreeThrowsAttempted: float
-    opponentOpponentFreeThrowRatio: float
+    opponentOpponentFreeThrowPercentage: float
+    
     opponentOpponentOffensiveRebounds: float
     opponentOpponentDefensiveRebounds: float
+    opponentOpponentTotalRebounds: float
     opponentOpponentAverageAssists: float
     opponentOpponentAverageSteals: float
     opponentOpponentAverageBlocks: float
     opponentOpponentAverageTurnovers: float
-    #DEFENSIVE FOUR FACTORS
-    opponentOpponentEffectiveFieldGoalPercentage: float
-    opponentOpponentTurnoverPercentage: float
-    opponentOpponentDefensiveReboundPercentage: float
-    opponentOpponentFreeThrowRate: float
-
+    opponentOpponentAveragePoints: float
 
 
 

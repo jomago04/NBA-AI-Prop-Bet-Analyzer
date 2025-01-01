@@ -18,8 +18,9 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Add automated statistical analysis
 
 ## To Do
-- Rework playerInfo.py to get the best data to use for prop bets (requires more research)
-- Figure out how to scrape the data with Selenium in a good and efficient way
+- Finish the Selenium scraper
+- Start work on FastAPI and AI query integration
+- Make a frontend for the project
 
 ## Update Log
 - 12/22/2024: 

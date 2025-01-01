@@ -1,5 +1,5 @@
 from app.services.seleniumScraper import SeleniumScraper
-from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats, PlayerInfo
+from app.models.playerInfo import PlayerLastFiveGameStats, PlayerIndividualFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats, PlayerInfo, PlayerOpposingTeamStats
 from app.utilities.timeConverter import TimeConverter
 from app.utilities.urlLoaders import UrlLoaders
 import time
@@ -21,6 +21,7 @@ def testScraper(playerName):
         
         ## MAIN URL TASKS ##
         urlLoaders.loadMainUrl(mainUrl)
+        
         # gets opposing team url
         opposingTeamUrl = scraper.getOpposingTeamUrl()
         
@@ -37,7 +38,6 @@ def testScraper(playerName):
             print("No data returned for player info.")
             return
         playerInfo = PlayerInfo(**playerInfo)
-        
         
         ## SPLITS URL TASKS ##
         urlLoaders.loadSplitsUrl(splitsUrl)
@@ -65,6 +65,15 @@ def testScraper(playerName):
         ]
         
         individualGames = [PlayerIndividualFiveGameStats(**game) for game in combinedStats]
+        
+        # OPPOSING TEAM WORK 
+        urlLoaders.loadOpposingTeamUrl(opposingTeamUrl)
+        
+        opposingTeamStats = scraper.getOpposingTeamStats()
+        if not opposingTeamStats:
+            print("No data returned for opposing team stats.")
+            return
+        opposingTeamStats = PlayerOpposingTeamStats(**opposingTeamStats)
             
         print("scraping complete")
         
@@ -168,6 +177,46 @@ def testScraper(playerName):
         print(f"Average Offensive Rating: {totalStats.averageOffensiveRating:.1f}")
         print(f"Average Defensive Rating: {totalStats.averageDefensiveRating:.1f}")
         
+        print("\n=== Opposing Team Stats ===")
+        print(f"Opponent Team Name: {opposingTeamStats.opponentTeamName}")
+        print(f"Opponent Wins: {opposingTeamStats.opponentWins}")
+        print(f"Opponent Losses: {opposingTeamStats.opponentLosses}")
+        print(f"Opponent Win Percentage: {opposingTeamStats.opponentWinPercentage:.1f}%")
+        print(f"Opponent Average Field Goals: {opposingTeamStats.opponentAverageFieldGoals:.1f}/{opposingTeamStats.opponentAverageFieldGoalsAttempted:.1f} ({opposingTeamStats.opponentAverageFieldGoalPercentage:.1f}%)")
+        print(f"Opponent Average Three Points: {opposingTeamStats.opponentAverageThreePoints:.1f}/{opposingTeamStats.opponentAverageThreePointsAttempted:.1f} ({opposingTeamStats.opponentAverageThreePointPercentage:.1f}%)")
+        print(f"Opponent Average Two Points: {opposingTeamStats.opponentAverageTwoPoints:.1f}/{opposingTeamStats.opponentAverageTwoPointsAttempted:.1f} ({opposingTeamStats.opponentAverageTwoPointPercentage:.1f}%)")
+        print(f"Opponent Average Free Throws: {opposingTeamStats.opponentAverageFreeThrows:.1f}/{opposingTeamStats.opponentAverageFreeThrowAttempts:.1f} ({opposingTeamStats.opponentAverageFreeThrowPercentage:.1f}%)")
+        print(f"Opponent Average Offensive Rebounds: {opposingTeamStats.opponentAverageOffensiveRebounds:.1f}")
+        print(f"Opponent Average Defensive Rebounds: {opposingTeamStats.opponentAverageDefensiveRebounds:.1f}")
+        print(f"Opponent Average Total Rebounds: {opposingTeamStats.opponentAverageTotalRebounds:.1f}")
+        print(f"Opponent Average Assists: {opposingTeamStats.opponentAverageAssists:.1f}")
+        print(f"Opponent Average Steals: {opposingTeamStats.opponentAverageSteals:.1f}")
+        print(f"Opponent Average Blocks: {opposingTeamStats.opponentAverageBlocks:.1f}")
+        print(f"Opponent Average Turnovers: {opposingTeamStats.opponentAverageTurnovers:.1f}")
+        print(f"Opponent Average Points: {opposingTeamStats.opponentAveragePoints:.1f}")
+        print(f"Opponent Offensive Rating: {opposingTeamStats.opponentOffensiveRating:.1f}")
+        print(f"Opponent Defensive Rating: {opposingTeamStats.opponentDefensiveRating:.1f}")
+        print(f"Opponent Pace Factor: {opposingTeamStats.opponentPaceFactor:.1f}")
+        print(f"Opponent Free Throw Rate: {opposingTeamStats.opponentFreeThrowRate:.1f}")
+        print(f"Opponent Three Point Rate: {opposingTeamStats.opponentThreePointRate:.1f}")
+        print(f"Opponent Effective Field Goal Percentage: {opposingTeamStats.opponentEffectiveFieldGoalPercentage:.1f}%")
+        print(f"Opponent Turnover Percentage: {opposingTeamStats.opponentTurnoverPercentage:.1f}%")
+        print(f"Opponent Defensive Rebound Percentage: {opposingTeamStats.opponentDefensiveReboundPercentage:.1f}%")
+        print(f"Opponent Free Throw Rate: {opposingTeamStats.opponentFreeThrowRate:.1f}")
+        
+        print("\n=== Opponent Opponent Stats ===")
+        print(f"Opponent Opponent Field Goals: {opposingTeamStats.opponentOpponentFieldGoals:.1f}/{opposingTeamStats.opponentOpponentFieldGoalsAttempted:.1f} ({opposingTeamStats.opponentOpponentFieldGoalPercentage:.1f}%)")
+        print(f"Opponent Opponent Three Points: {opposingTeamStats.opponentOpponentThreePoints:.1f}/{opposingTeamStats.opponentOpponentThreePointsAttempted:.1f} ({opposingTeamStats.opponentOpponentThreePointPercentage:.1f}%)")
+        print(f"Opponent Opponent Two Points: {opposingTeamStats.opponentOpponentTwoPoints:.1f}/{opposingTeamStats.opponentOpponentTwoPointsAttempted:.1f} ({opposingTeamStats.opponentOpponentTwoPointPercentage:.1f}%)")
+        print(f"Opponent Opponent Free Throws: {opposingTeamStats.opponentOpponentFreeThrows:.1f}/{opposingTeamStats.opponentOpponentFreeThrowsAttempted:.1f} ({opposingTeamStats.opponentOpponentFreeThrowPercentage:.1f}%)")
+        print(f"Opponent Opponent Offensive Rebounds: {opposingTeamStats.opponentOpponentOffensiveRebounds:.1f}")
+        print(f"Opponent Opponent Defensive Rebounds: {opposingTeamStats.opponentOpponentDefensiveRebounds:.1f}")
+        print(f"Opponent Opponent Total Rebounds: {opposingTeamStats.opponentOpponentTotalRebounds:.1f}")
+        print(f"Opponent Opponent Average Assists: {opposingTeamStats.opponentOpponentAverageAssists:.1f}")
+        print(f"Opponent Opponent Average Steals: {opposingTeamStats.opponentOpponentAverageSteals:.1f}")
+        print(f"Opponent Opponent Average Blocks: {opposingTeamStats.opponentOpponentAverageBlocks:.1f}")
+        print(f"Opponent Opponent Average Turnovers: {opposingTeamStats.opponentOpponentAverageTurnovers:.1f}")
+        print(f"Opponent Opponent Average Points: {opposingTeamStats.opponentOpponentAveragePoints:.1f}")
         
     except Exception as e:
         print(f"Error during scraping: {str(e)}")

@@ -45,13 +45,13 @@ class SeleniumScraper:
         # Gets the opposing team from the main player url
         try:
             # Finds the opposing team key
-            opposingTeamKey = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['OPPOSING_TEAM'])))
-            
+            opposingTeamKey = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['OPPOSING_TEAM']))).text
+            opposingTeamUrl = "https://www.basketball-reference.com/teams/" + opposingTeamKey + "/2025.html"
         except Exception as e:
             print(f"Error getting opposing team: {str(e)}")
             return None
         
-        return opposingTeamKey.text
+        return opposingTeamUrl
     
     # USES MAIN URL
     def getPlayerInfo(self):
@@ -81,7 +81,6 @@ class SeleniumScraper:
 
             # Loops through the p tags and adds only the team and experience to the playerInfo dictionary
             for p in pTags:
-                print(p.text)
                 if 'Team:' in p.text:
                     playerInfo['team'] = p.text.split(':')[1].strip()
             
@@ -284,6 +283,108 @@ class SeleniumScraper:
         
         except Exception as e:
             print(f"Error retrieving current season average stats: {str(e)}")
+            return {}
+        
+    def getOpposingTeamStats(self):
+        try:
+            opposingTeamInfoDiv = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div#meta')))
+            # Find all spans and get the second one using index [1]
+            opposingTeamName = opposingTeamInfoDiv.find_element(By.CSS_SELECTOR, 'h1').find_elements(By.TAG_NAME, 'span')[1].text
+            
+            
+            # Gets the team and opponent table
+            teamAndOpponentTable = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#team_and_opponent')))
+            
+            # Gets the average opponent team per game row
+            averageOpponentTeamPerGameRow = teamAndOpponentTable.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[1]
+            # Gets the average opponent opponent team per game row
+            averageOpponentOpponentTeamPerGameRow = teamAndOpponentTable.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[5]
+            
+            # Gets the cells in the average opponent team per game row
+            averageOpponentTeamPerGameCells = averageOpponentTeamPerGameRow.find_elements(By.TAG_NAME, 'td')
+            # Gets the cells in the average opponent opponent team per game row
+            averageOpponentOpponentTeamPerGameCells = averageOpponentOpponentTeamPerGameRow.find_elements(By.TAG_NAME, 'td')
+            
+            opponentTeamMiscTable = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#team_misc')))
+            opponentTeamMiscRow = opponentTeamMiscTable.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[0]
+            opponentTeamMiscCells = opponentTeamMiscRow.find_elements(By.TAG_NAME, 'td')
+            
+            opposingTeamStats = {
+                'opponentTeamName': opposingTeamName,
+                'opponentWins': int(opponentTeamMiscCells[0].text),
+                'opponentLosses': int(opponentTeamMiscCells[1].text),
+                'opponentWinPercentage': float(float(opponentTeamMiscCells[0].text) / (float(opponentTeamMiscCells[0].text) + float(opponentTeamMiscCells[1].text))) * 100,
+                
+                'opponentAverageFieldGoals': float(averageOpponentTeamPerGameCells[2].text),
+                'opponentAverageFieldGoalsAttempted': float(averageOpponentTeamPerGameCells[3].text),
+                'opponentAverageFieldGoalPercentage': float(float(averageOpponentTeamPerGameCells[2].text) / float(averageOpponentTeamPerGameCells[3].text)) * 100,
+                
+                'opponentAverageThreePoints': float(averageOpponentTeamPerGameCells[5].text),
+                'opponentAverageThreePointsAttempted': float(averageOpponentTeamPerGameCells[6].text),
+                'opponentAverageThreePointPercentage': float(float(averageOpponentTeamPerGameCells[5].text) / float(averageOpponentTeamPerGameCells[6].text)) * 100,
+                
+                'opponentAverageTwoPoints': float(averageOpponentTeamPerGameCells[8].text),
+                'opponentAverageTwoPointsAttempted': float(averageOpponentTeamPerGameCells[9].text),
+                'opponentAverageTwoPointPercentage': float(float(averageOpponentTeamPerGameCells[8].text) / float(averageOpponentTeamPerGameCells[9].text)) * 100,
+                
+                'opponentAverageFreeThrows': float(averageOpponentTeamPerGameCells[11].text),
+                'opponentAverageFreeThrowAttempts': float(averageOpponentTeamPerGameCells[12].text),
+                'opponentAverageFreeThrowPercentage': float(float(averageOpponentTeamPerGameCells[11].text) / float(averageOpponentTeamPerGameCells[12].text)) * 100,
+                
+                'opponentAverageOffensiveRebounds': float(averageOpponentTeamPerGameCells[14].text),
+                'opponentAverageDefensiveRebounds': float(averageOpponentTeamPerGameCells[15].text),
+                'opponentAverageTotalRebounds': float(averageOpponentTeamPerGameCells[16].text),
+                
+                'opponentAverageAssists': float(averageOpponentTeamPerGameCells[17].text),
+                'opponentAverageSteals': float(averageOpponentTeamPerGameCells[18].text),
+                'opponentAverageBlocks': float(averageOpponentTeamPerGameCells[19].text),
+                'opponentAverageTurnovers': float(averageOpponentTeamPerGameCells[20].text),
+                
+                'opponentAveragePoints': float(averageOpponentTeamPerGameCells[22].text),
+                
+                'opponentOffensiveRating': float(opponentTeamMiscCells[8].text),
+                'opponentDefensiveRating': float(opponentTeamMiscCells[9].text),
+                'opponentPaceFactor': float(opponentTeamMiscCells[10].text),
+                'opponentFreeThrowRate': float(opponentTeamMiscCells[11].text),
+                'opponentThreePointRate': float(opponentTeamMiscCells[12].text),
+                
+                'opponentEffectiveFieldGoalPercentage': float(opponentTeamMiscCells[16].text) * 100,
+                'opponentTurnoverPercentage': float(opponentTeamMiscCells[17].text),
+                'opponentDefensiveReboundPercentage': float(opponentTeamMiscCells[18].text),
+                'opponentFreeThrowRate': float(opponentTeamMiscCells[19].text) * 100,
+                
+                'opponentOpponentFieldGoals': float(averageOpponentOpponentTeamPerGameCells[2].text),
+                'opponentOpponentFieldGoalsAttempted': float(averageOpponentOpponentTeamPerGameCells[3].text),
+                'opponentOpponentFieldGoalPercentage': float(float(averageOpponentOpponentTeamPerGameCells[2].text) / float(averageOpponentOpponentTeamPerGameCells[3].text)) * 100,
+                
+                'opponentOpponentThreePoints': float(averageOpponentOpponentTeamPerGameCells[5].text),
+                'opponentOpponentThreePointsAttempted': float(averageOpponentOpponentTeamPerGameCells[6].text),
+                'opponentOpponentThreePointPercentage': float(float(averageOpponentOpponentTeamPerGameCells[5].text) / float(averageOpponentOpponentTeamPerGameCells[6].text)) * 100,
+                
+                'opponentOpponentTwoPoints': float(averageOpponentOpponentTeamPerGameCells[8].text),
+                'opponentOpponentTwoPointsAttempted': float(averageOpponentOpponentTeamPerGameCells[9].text),
+                'opponentOpponentTwoPointPercentage': float(float(averageOpponentOpponentTeamPerGameCells[8].text) / float(averageOpponentOpponentTeamPerGameCells[9].text)) * 100,
+                
+                'opponentOpponentFreeThrows': float(averageOpponentOpponentTeamPerGameCells[11].text),
+                'opponentOpponentFreeThrowsAttempted': float(averageOpponentOpponentTeamPerGameCells[12].text),
+                'opponentOpponentFreeThrowPercentage': float(float(averageOpponentOpponentTeamPerGameCells[11].text) / float(averageOpponentOpponentTeamPerGameCells[12].text)) * 100,
+                
+                'opponentOpponentOffensiveRebounds': float(averageOpponentOpponentTeamPerGameCells[14].text),
+                'opponentOpponentDefensiveRebounds': float(averageOpponentOpponentTeamPerGameCells[15].text),
+                'opponentOpponentTotalRebounds': float(averageOpponentOpponentTeamPerGameCells[16].text),
+
+                'opponentOpponentAverageAssists': float(averageOpponentOpponentTeamPerGameCells[17].text),
+                'opponentOpponentAverageSteals': float(averageOpponentOpponentTeamPerGameCells[18].text),
+                'opponentOpponentAverageBlocks': float(averageOpponentOpponentTeamPerGameCells[19].text),
+                'opponentOpponentAverageTurnovers': float(averageOpponentOpponentTeamPerGameCells[20].text),
+                
+                'opponentOpponentAveragePoints': float(averageOpponentOpponentTeamPerGameCells[22].text),
+                
+            }
+            return opposingTeamStats
+        
+        except Exception as e:
+            print(f"Error retrieving opposing team stats: {str(e)}")
             return {}
       
     def calculatePlayerFiveGameAverages(self, lastFiveGameStats: list, advancedFiveGameStats: list):

@@ -19,3 +19,6 @@ class UrlLoaders:
         print(f"Loading advanced gamelog url: {advancedGamelogUrl}")
         self.driver.get(advancedGamelogUrl)
     
+    def loadOpposingTeamUrl(self, opposingTeamUrl: str):
+        print(f"Loading opposing team url: {opposingTeamUrl}")
+        self.driver.get(opposingTeamUrl)
