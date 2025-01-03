@@ -430,32 +430,32 @@ class SeleniumScraper:
         numGames = len(lastFiveGameStats)
         # Calculates the averages
         averages = {
-            'averageMinutesPlayed': float(sum(game['minutesPlayed'] for game in lastFiveGameStats) / numGames),
+            'averageMinutesPlayed': float(sum(game.minutesPlayed for game in lastFiveGameStats) / numGames),
             
-            'averageFieldGoals': float(sum(game['fieldGoals'] for game in lastFiveGameStats) / numGames),
-            'averageFieldGoalAttempts': float(sum(game['fieldGoalAttempts'] for game in lastFiveGameStats) / numGames),
-            'averageFieldGoalPercentage': float(sum(game['fieldGoalPercentage'] for game in lastFiveGameStats) / numGames),
+            'averageFieldGoals': float(sum(game.fieldGoals for game in lastFiveGameStats) / numGames),
+            'averageFieldGoalAttempts': float(sum(game.fieldGoalAttempts for game in lastFiveGameStats) / numGames),
+            'averageFieldGoalPercentage': float(sum(game.fieldGoalPercentage for game in lastFiveGameStats) / numGames),
             
-            'averageThreePoints': float(sum(game['threePoints'] for game in lastFiveGameStats) / numGames),
-            'averageThreePointAttempts': float(sum(game['threePointAttempts'] for game in lastFiveGameStats) / numGames),
-            'averageThreePointPercentage': float(sum(game['threePointPercentage'] for game in lastFiveGameStats) / numGames),
+            'averageThreePoints': float(sum(game.threePoints for game in lastFiveGameStats) / numGames),
+            'averageThreePointAttempts': float(sum(game.threePointAttempts for game in lastFiveGameStats) / numGames),
+            'averageThreePointPercentage': float(sum(game.threePointPercentage for game in lastFiveGameStats) / numGames),
             
-            'averageFreeThrows': float(sum(game['freeThrows'] for game in lastFiveGameStats) / numGames),
-            'averageFreeThrowAttempts': float(sum(game['freeThrowAttempts'] for game in lastFiveGameStats) / numGames),
-            'averageFreeThrowPercentage': float(sum(game['freeThrowPercentage'] for game in lastFiveGameStats) / numGames),
+            'averageFreeThrows': float(sum(game.freeThrows for game in lastFiveGameStats) / numGames),
+            'averageFreeThrowAttempts': float(sum(game.freeThrowAttempts for game in lastFiveGameStats) / numGames),
+            'averageFreeThrowPercentage': float(sum(game.freeThrowPercentage for game in lastFiveGameStats) / numGames),
             
-            'averageOffensiveRebounds': float(sum(game['offensiveRebounds'] for game in lastFiveGameStats) / numGames),
-            'averageDefensiveRebounds': float(sum(game['defensiveRebounds'] for game in lastFiveGameStats) / numGames),
-            'averageTotalRebounds': float(sum(game['totalRebounds'] for game in lastFiveGameStats) / numGames),
+            'averageOffensiveRebounds': float(sum(game.offensiveRebounds for game in lastFiveGameStats) / numGames),
+            'averageDefensiveRebounds': float(sum(game.defensiveRebounds for game in lastFiveGameStats) / numGames),
+            'averageTotalRebounds': float(sum(game.totalRebounds for game in lastFiveGameStats) / numGames),
             
-            'averageAssists': float(sum(game['assists'] for game in lastFiveGameStats) / numGames),
-            'averageSteals': float(sum(game['steals'] for game in lastFiveGameStats) / numGames),
-            'averageBlocks': float(sum(game['blocks'] for game in lastFiveGameStats) / numGames),
-            'averageTurnovers': float(sum(game['turnovers'] for game in lastFiveGameStats) / numGames),
+            'averageAssists': float(sum(game.assists for game in lastFiveGameStats) / numGames),
+            'averageSteals': float(sum(game.steals for game in lastFiveGameStats) / numGames),
+            'averageBlocks': float(sum(game.blocks for game in lastFiveGameStats) / numGames),
+            'averageTurnovers': float(sum(game.turnovers for game in lastFiveGameStats) / numGames),
             
-            'averagePoints': float(sum(game['points'] for game in lastFiveGameStats) / numGames),
-            'averageGameScore': float(sum(game['gameScore'] for game in lastFiveGameStats) / numGames),
-            'averagePlusMinus': float(sum(game['plusMinus'] for game in lastFiveGameStats) / numGames),
+            'averagePoints': float(sum(game.points for game in lastFiveGameStats) / numGames),
+            'averageGameScore': float(sum(game.gameScore for game in lastFiveGameStats) / numGames),
+            'averagePlusMinus': float(sum(game.plusMinus for game in lastFiveGameStats) / numGames),
             
             'averageTrueShootingPercentage': float(sum(game['trueShootingPercentage'] for game in advancedFiveGameStats) / numGames),
             'averageEffectiveFieldGoalPercentage': float(sum(game['effectiveFieldGoalPercentage'] for game in advancedFiveGameStats) / numGames),

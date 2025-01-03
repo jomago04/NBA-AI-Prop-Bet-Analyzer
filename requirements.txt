@@ -8,3 +8,4 @@ pandas
 pydantic
 selenium
 webdriver-manager
+openai
