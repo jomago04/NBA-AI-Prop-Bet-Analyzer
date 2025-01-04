@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from app.services.getPlayerStats import GetNBAPlayerStats
+from app.services.runScraper import GetNBAPlayerStats
 from app.services.aiAnalysis import NBAAiAnalysis
 from dotenv import load_dotenv
 

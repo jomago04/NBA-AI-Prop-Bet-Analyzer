@@ -45,7 +45,7 @@ class NBAAiAnalysis:
         - Opposing Team: {opposing_team.opponentTeamName} ({opposing_team.opponentWins}-{opposing_team.opponentLosses})
 
         Based on these statistics, should I bet OVER or UNDER {line} {bet_type}?
-        Provide a brief explanation with your prediction.
+        Provide a brief explanation with your prediction and provide a confidence score from 0 to 100.
         """
 
     async def analyze_bet(self, player_name: str, bet_type: str, line: float, stats: dict):

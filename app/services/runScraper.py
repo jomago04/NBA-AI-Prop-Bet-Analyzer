@@ -1,4 +1,4 @@
-from app.services.seleniumScraper import SeleniumScraper
+from app.services.scrapingLogic import SeleniumScraper
 from app.models.playerInfo import PlayerIndividualFiveGameStats, PlayerLastFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats, PlayerInfo, PlayerOpposingTeamStats
 from app.utilities.urlLoaders import UrlLoaders
 
