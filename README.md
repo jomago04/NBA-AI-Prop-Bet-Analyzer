@@ -2,6 +2,12 @@
 
 Python project that scrapes NBA player statistics for prop bet analysis.
 
+## Startup 
+- Run uvicorn main:app --reload
+- Goto http://127.0.0.1:8000/docs#/default/analyzeBet_analyze_post (LOCAL ONLY)
+- Enter a name, prop bet type, and the line and click analyze
+- The data will be displayed in the response
+
 ## Features
 - Scrapes NBA player stats
 - Stores data for analysis
@@ -24,6 +30,7 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Fix a lot of the scraping issues
 - Add more relevant scraped data to prompt
 - Add prompt engineering depending on prop bet type
+- Add better error handling and testing capabilities
 
 ## Update Log
 - 12/22/2024: 

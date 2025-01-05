@@ -100,18 +100,42 @@ class SeleniumScraper:
     # USES GAMELOG URL
     def getPlayerFiveGameStats(self, playerName: str):
         try:
-            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['GAME_TABLE'])))
-            # Finds the last 5 rows while excluding the headers
-            rows = table.find_elements(By.CSS_SELECTOR, ScraperConstants.SELECTORS['LAST_FIVE_ROWS'])[-5:] 
-            
+            print(f"Attempting to get game stats for {playerName}")
+            # Gets the table
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table#pgl_basic')))
+            print("Successfully found table")
+            # Finds all rows in the table excluding the headers
+            allRows = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')
+            print(f"Found {len(allRows)} rows")
             # Creates a list to store the last 5 game stats
             lastFiveGameStats = []
             
+            # Counter for the number of rows processed
+            processedRows = 0
+            
+            # Index of the last row in the table
+            rowIndex = len(allRows) - 1
+            
             # Loops through the last 5 rows
-            for i, row in enumerate(rows, 1):
+            while processedRows < 5 and rowIndex >= 0:
+                row = allRows[rowIndex]
                 try:
-                    # Finds the cells in the row
-                    cells = row.find_elements(By.TAG_NAME, "td")
+                    # Checks cell 7 to verify if the row is a game played by checking for 'Inactive' text
+                    verifyRow = row.find_elements(By.TAG_NAME, 'td')[7]
+                    if 'Inactive' in verifyRow.text:
+                        print(f"Skipping inactive game at index {rowIndex}")
+                        # If Inactive is found, decrement the row index and continue
+                        rowIndex -= 1
+                        continue
+                    
+                    # Finds all cells in the row
+                    cells = row.find_elements(By.TAG_NAME, 'td')
+                    
+                    # Additional check to ensure the row has the correct number of cells
+                    if len(cells) < 28:
+                        print(f"Skipping row {rowIndex} - insufficient cells")
+                        rowIndex -= 1
+                        continue
                     
                     # Creates a dictionary to store the last 5 game stats to send to playerInfo.py
                     gameStats = {
@@ -148,41 +172,72 @@ class SeleniumScraper:
                     # Adds the game stats to the list
                     lastFiveGameStats.append(gameStats)
                     
+                    # Increments the processed rows counter
+                    processedRows += 1
+                    print(f"Successfully processed game {processedRows}")
+
                 except (ValueError, IndexError) as e:
-                    print(f"Error processing game {i}: {str(e)}")
-                    continue
+                    raise RuntimeError(f"Error processing game at index {rowIndex}: {str(e)}")
                 
+                # Decrements the row index to move to the previous row
+                rowIndex -= 1
+            
+            print(f"Completed processing with {len(lastFiveGameStats)} games")
+            print("Last Five Game Stats:", lastFiveGameStats)     
             return lastFiveGameStats
             
         except Exception as e:
-            print(f"Error retrieving game stats: {str(e)}")
-            return []
+            raise RuntimeError(f"Failure to retrieve last 5 game stats for {playerName}: {str(e)}")
+
         
     # USES ADVANCED GAMELOG URL
     def getPlayerAdvancedFiveGameStats(self):
         try:
-            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#pgl_advanced")))
-            rows = table.find_elements(By.CSS_SELECTOR, "tbody tr:not(.thead)")[-5:]
+            table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table#pgl_advanced")))
+            allRows = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')
             
+            # Creates a list to store the last 5 game stats
             advancedFiveGameStats = []
+            processedRows = 0
+            rowIndex = len(allRows) - 1
             
-            for i, row in enumerate(rows, 1):
-                cells = row.find_elements(By.TAG_NAME, "td") 
+            while processedRows < 5 and rowIndex >= 0:
+                row = allRows[rowIndex]
+                try:
+                    verifyRow = row.find_elements(By.TAG_NAME, 'td')[7] # Checks td 7 to verify if the row is a game played
+                    if 'Inactive' in verifyRow.text:
+                        print(f"Skipping inactive game at index {rowIndex}")
+                        rowIndex -= 1
+                        continue
+                    
+                    cells = row.find_elements(By.TAG_NAME, 'td')
+                    if len(cells) < 20:
+                        print(f"Skipping row {rowIndex} - insufficient cells")
+                        rowIndex -= 1
+                        continue
                 
-                gameStats = {
-                    'trueShootingPercentage': float(cells[9].text) * 100,
-                    'effectiveFieldGoalPercentage': float(cells[10].text) * 100,
-                    'usagePercentage': float(cells[18].text),
-                    'offensiveRating': float(cells[19].text),
-                    'defensiveRating': float(cells[20].text)
-                }
-                advancedFiveGameStats.append(gameStats)
+                    gameStats = {
+                        'trueShootingPercentage': float(cells[9].text) * 100,
+                        'effectiveFieldGoalPercentage': float(cells[10].text) * 100,
+                        'usagePercentage': float(cells[18].text),
+                        'offensiveRating': float(cells[19].text),
+                        'defensiveRating': float(cells[20].text)
+                    }
+                    advancedFiveGameStats.append(gameStats)
+                    processedRows += 1
+                    print(f"Successfully processed advanced game {processedRows}")
                 
+            
+                except (ValueError, IndexError) as e:
+                    print(f"Error processing game at index {rowIndex}: {str(e)}")\
+                        
+            rowIndex -= 1
+            
+            print("Advanced Stats:", advancedFiveGameStats)   
             return advancedFiveGameStats
         
         except Exception as e:
-            print(f"Error retrieving advanced game stats: {str(e)}")
-            return []
+            raise RuntimeError(f"Failure to retrieve last 5 game advanced stats: {str(e)}")
     
     # USES SPLITS URL
     def getPlayerCurrentSeasonTotalStats(self):
