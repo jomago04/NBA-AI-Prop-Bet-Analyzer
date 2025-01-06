@@ -45,10 +45,11 @@ async def analyzeBet(bet_request: BetRequest):
             "bet_type": bet_request.bet_type,
             "line": bet_request.line,
             "analysis": analysis,
-            "stats_used": {
-                "recent_games": last_five_game_averages,
-                "season_averages": season_averages
-            }
+            # TODO: Add stats_used back in but actually have it be the stats used especially will be useful when additional prompt engineering is used
+            #"stats_used": {
+            #    "recent_games": last_five_game_averages,
+            #    "season_averages": season_averages
+            #}
         }
 
     except Exception as e:

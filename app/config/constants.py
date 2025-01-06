@@ -9,5 +9,7 @@ class ScraperConstants:
         'CURRENT_SEASON_ROWS': "tbody tr:not(.thead)"
     }
     
+    # TODO: this needs to get reworked at some point or maybe even removed 
+    
 
     

@@ -6,7 +6,7 @@ from app.config.selenium_config import SeleniumConfig
 from app.config.constants import ScraperConstants
 from app.utilities.urlLoaders import UrlLoaders
 from app.utilities.calculateDaysSinceLastGame import calculateDaysSinceLastGame        
-from html import unescape
+import unicodedata
 
 class SeleniumScraper:
     
@@ -19,28 +19,66 @@ class SeleniumScraper:
         SeleniumConfig.cleanup_driver(self.driver)
         
     # Gets all necessary urls for the player
-    def getPlayerUrl(playerName: str):
-        # Splits player name into first and last name
-        nameParts = NameFormat.getNameParts(playerName)
-        # Checks if player name has both first and last name to avoid errors
-        if len(nameParts) < 2:
-            return "Please enter both first and last name"
-        # [-1] grabs last item in list, [0] grabs first item in list
-        lastName, firstName = nameParts[-1], nameParts[0]
-        # [:1] grabs first letter of last name, [:5] grabs first 5 letters of last name, [:2] grabs first 2 letters of first name
-        mainPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{lastName[:1]}/{lastName[:5]}{firstName[:2]}01.html"
-        splitsPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{lastName[:1]}/{lastName[:5]}{firstName[:2]}01/splits/2025" # TODO: Make way to get current year
-        gamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{lastName[:1]}/{lastName[:5]}{firstName[:2]}01/gamelog/2025"
-        advancedGamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{lastName[:1]}/{lastName[:5]}{firstName[:2]}01/gamelog-advanced/2025"
-        
-        return mainPlayerUrl, splitsPlayerUrl, gamelogPlayerUrl, advancedGamelogPlayerUrl
+ 
 
  #FOR ALL FUNCTIONS THAT USE URLS, need to find a way to load pages only once so we can get all data on one load per page
     #this can be done by making functions that load the pages and call them before scraping the data
     #for example, 1. run player urls, 2. run main url, then run all functions that use main url, 3. run splits url, then run all functions that use splits url,.....
     # Gets the opposing team URL from the main player url (need to better optimize for loading pages only when needed)
     
-    # USES MAIN URL
+    def getPlayerCode(self, playerName: str):
+        try:
+            def normalizeName(name: str):
+                name = name.split("(")[0].strip()
+                normalizedName = unicodedata.normalize('NFKD', name)
+                normalizedName = normalizedName.encode('ASCII', 'ignore').decode('ASCII')
+                return normalizedName.lower()
+            
+            splitPlayerName = playerName.split(" ")
+            firstName, lastName = splitPlayerName[0], splitPlayerName[1]
+            searchLink = f"https://www.basketball-reference.com/search/search.fcgi?search={firstName}+{lastName}"
+            
+            print(f"Searching URL: {searchLink}")
+            self.driver.get(searchLink)
+            
+            playerSearchDiv = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div#players")))
+            
+            getEachSearchedPlayer = playerSearchDiv.find_elements(By.CSS_SELECTOR, "div.search-item")
+            print(f"Found {len(getEachSearchedPlayer)} search results")
+            
+            for player in getEachSearchedPlayer:
+                nameDiv = player.find_element(By.CSS_SELECTOR, "div.search-item-name")
+                name = nameDiv.text.strip()
+                print(f"Comparing: '{normalizeName(name)}' with '{normalizeName(playerName)}'")
+                
+                if normalizeName(name) == normalizeName(playerName):
+                    urlDiv = player.find_element(By.CSS_SELECTOR, "div.search-item-url")
+                    playerUrl = urlDiv.text.strip()
+                    print(f"Found match! URL: {playerUrl}") 
+                    playerCode = playerUrl[9:-5]
+                    
+                    return playerCode
+            
+        except Exception as e:
+            print(f"Error getting player code: {str(e)}")
+            return None
+            
+    # Gets all necessary urls for the player
+    def getPlayerUrl(self, playerName: str):
+        try:
+            playerCode = self.getPlayerCode(playerName)
+            
+            mainPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}.html"
+            splitsPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/splits/2025" # TODO: Make way to get current year
+            gamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/gamelog/2025"
+            advancedGamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/gamelog-advanced/2025"
+            
+            return mainPlayerUrl, splitsPlayerUrl, gamelogPlayerUrl, advancedGamelogPlayerUrl
+        
+        except Exception as e:
+            print(f"Error getting player url: {str(e)}")
+            return None
+    
     def getOpposingTeamUrl(self):
         # Gets the opposing team from the main player url
         try:

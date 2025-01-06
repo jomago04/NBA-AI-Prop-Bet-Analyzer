@@ -23,6 +23,9 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 
 ## Future Plans
 - Implement automated prop bet scraping so you no longer have to manually find prop bets
+- Start scraping historical stats and bet lines to apply machine learning models to better predict prop bets
+  - This allows AI analysis AND machine learning models to be used to predict prop bets
+
 - Implement a frontend for the project
 - Add additional sports to the project
 

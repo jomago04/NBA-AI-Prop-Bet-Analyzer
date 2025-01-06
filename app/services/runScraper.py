@@ -14,7 +14,7 @@ class GetNBAPlayerStats:
     def getAllPlayerStats(self, playerName):
         try:
             # Gets the player urls
-            mainUrl, splitsUrl, gamelogUrl, advancedGamelogUrl = SeleniumScraper.getPlayerUrl(playerName)
+            mainUrl, splitsUrl, gamelogUrl, advancedGamelogUrl = self.scraper.getPlayerUrl(playerName)
             
             # Initializes the url loaders
             urlLoaders = UrlLoaders(self.scraper.driver)
