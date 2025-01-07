@@ -29,10 +29,17 @@ class SeleniumScraper:
     def getPlayerCode(self, playerName: str):
         try:
             def normalizeName(name: str):
+                currentYear = None
+                if "(" in name:
+                    year = name.split(")")[0].split("(")[1]
+                    if "-" in year:
+                        currentYear = year.split("-")[1].strip()
+                    
+                    
                 name = name.split("(")[0].strip()
                 normalizedName = unicodedata.normalize('NFKD', name)
                 normalizedName = normalizedName.encode('ASCII', 'ignore').decode('ASCII')
-                return normalizedName.lower()
+                return normalizedName.lower(), currentYear
             
             splitPlayerName = playerName.split(" ")
             firstName, lastName = splitPlayerName[0], splitPlayerName[1]
@@ -49,15 +56,16 @@ class SeleniumScraper:
             for player in getEachSearchedPlayer:
                 nameDiv = player.find_element(By.CSS_SELECTOR, "div.search-item-name")
                 name = nameDiv.text.strip()
-                print(f"Comparing: '{normalizeName(name)}' with '{normalizeName(playerName)}'")
+                normalizedName, currentYear = normalizeName(name)
+                print(f"Comparing: '{normalizedName}' with '{normalizeName(playerName)[0]}'")
                 
-                if normalizeName(name) == normalizeName(playerName):
+                if normalizedName == normalizeName(playerName)[0]:
                     urlDiv = player.find_element(By.CSS_SELECTOR, "div.search-item-url")
                     playerUrl = urlDiv.text.strip()
                     print(f"Found match! URL: {playerUrl}") 
                     playerCode = playerUrl[9:-5]
                     
-                    return playerCode
+                    return playerCode, currentYear
             
         except Exception as e:
             print(f"Error getting player code: {str(e)}")
@@ -66,12 +74,12 @@ class SeleniumScraper:
     # Gets all necessary urls for the player
     def getPlayerUrl(self, playerName: str):
         try:
-            playerCode = self.getPlayerCode(playerName)
+            playerCode, currentYear = self.getPlayerCode(playerName)
             
             mainPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}.html"
-            splitsPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/splits/2025" # TODO: Make way to get current year
-            gamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/gamelog/2025"
-            advancedGamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/gamelog-advanced/2025"
+            splitsPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/splits/{currentYear}"
+            gamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/gamelog/{currentYear}"
+            advancedGamelogPlayerUrl = f"{ScraperConstants.BASE_URL}/players/{playerCode}/gamelog-advanced/{currentYear}"
             
             return mainPlayerUrl, splitsPlayerUrl, gamelogPlayerUrl, advancedGamelogPlayerUrl
         
@@ -174,6 +182,8 @@ class SeleniumScraper:
                         print(f"Skipping row {rowIndex} - insufficient cells")
                         rowIndex -= 1
                         continue
+                    
+                    
                     
                     # Creates a dictionary to store the last 5 game stats to send to playerInfo.py
                     gameStats = {
