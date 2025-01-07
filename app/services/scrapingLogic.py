@@ -5,7 +5,9 @@ from app.utilities.nameFormat import NameFormat
 from app.config.selenium_config import SeleniumConfig
 from app.config.constants import ScraperConstants
 from app.utilities.urlLoaders import UrlLoaders
-from app.utilities.calculateDaysSinceLastGame import calculateDaysSinceLastGame        
+from app.utilities.calculateDaysSinceLastGame import calculateDaysSinceLastGame  
+from app.utilities.safeConvert import safe_convert
+      
 import unicodedata
 
 class SeleniumScraper:
@@ -188,34 +190,34 @@ class SeleniumScraper:
                     # Creates a dictionary to store the last 5 game stats to send to playerInfo.py
                     gameStats = {
                         'playerName': NameFormat.formatName(NameFormat.getNameParts(playerName)),
-                        'opponent': row.find_elements(By.TAG_NAME, 'td')[5].text,  # Opponent team
-                        'isAway': row.find_elements(By.TAG_NAME, 'td')[4].text == '@',  # Location
-                        'minutesPlayed': TimeConverter.convertTimeStringToFloat(cells[8].text),
+                        'opponent': cells[5].text,
+                        'isAway': cells[4].text == '@',
+                        'minutesPlayed': TimeConverter.convertTimeStringToFloat(cells[8].text or '0:00'),
                         
-                        'fieldGoals': int(cells[9].text),
-                        'fieldGoalAttempts': int(cells[10].text),
-                        'fieldGoalPercentage': float(cells[11].text) * 100,
+                        'fieldGoals': safe_convert(cells[9].text, int),
+                        'fieldGoalAttempts': safe_convert(cells[10].text, int),
+                        'fieldGoalPercentage': safe_convert(cells[11].text) * 100,
                         
-                        'threePoints': int(cells[12].text),
-                        'threePointAttempts': int(cells[13].text),
-                        'threePointPercentage': float(cells[14].text) * 100,
-                            
-                        'freeThrows': int(cells[15].text),
-                        'freeThrowAttempts': int(cells[16].text),
-                        'freeThrowPercentage': float(cells[17].text) * 100,
+                        'threePoints': safe_convert(cells[12].text, int),
+                        'threePointAttempts': safe_convert(cells[13].text, int),
+                        'threePointPercentage': safe_convert(cells[14].text) * 100,
                         
-                        'offensiveRebounds': int(cells[18].text),
-                        'defensiveRebounds': int(cells[19].text),
-                        'totalRebounds': int(cells[20].text),
+                        'freeThrows': safe_convert(cells[15].text, int),
+                        'freeThrowAttempts': safe_convert(cells[16].text, int),
+                        'freeThrowPercentage': safe_convert(cells[17].text) * 100,
                         
-                        'assists': int(cells[21].text),
-                        'steals': int(cells[22].text),
-                        'blocks': int(cells[23].text),
-                        'turnovers': int(cells[24].text),
+                        'offensiveRebounds': safe_convert(cells[18].text, int),
+                        'defensiveRebounds': safe_convert(cells[19].text, int),
+                        'totalRebounds': safe_convert(cells[20].text, int),
                         
-                        'points': int(cells[26].text),
-                        'gameScore': float(cells[27].text),
-                        'plusMinus': int(cells[28].text)
+                        'assists': safe_convert(cells[21].text, int),
+                        'steals': safe_convert(cells[22].text, int),
+                        'blocks': safe_convert(cells[23].text, int),
+                        'turnovers': safe_convert(cells[24].text, int),
+                        
+                        'points': safe_convert(cells[26].text, int),
+                        'gameScore': safe_convert(cells[27].text),
+                        'plusMinus': safe_convert(cells[28].text, int)
                     }
                     # Adds the game stats to the list
                     lastFiveGameStats.append(gameStats)
@@ -265,11 +267,11 @@ class SeleniumScraper:
                         continue
                 
                     gameStats = {
-                        'trueShootingPercentage': float(cells[9].text) * 100,
-                        'effectiveFieldGoalPercentage': float(cells[10].text) * 100,
-                        'usagePercentage': float(cells[18].text),
-                        'offensiveRating': float(cells[19].text),
-                        'defensiveRating': float(cells[20].text)
+                        'trueShootingPercentage': safe_convert(cells[9].text, float) * 100,
+                        'effectiveFieldGoalPercentage': safe_convert(cells[10].text, float) * 100,
+                        'usagePercentage': safe_convert(cells[18].text, float),
+                        'offensiveRating': safe_convert(cells[19].text, float),
+                        'defensiveRating': safe_convert(cells[20].text, float)
                     }
                     advancedFiveGameStats.append(gameStats)
                     processedRows += 1
