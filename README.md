@@ -71,5 +71,6 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - 1/9/2025:
 - Attempted to add a prop line API but it's not working due to how the API works, easier for now to manually enter the prop line
 - Starting to think about a seperate project that involves stocks and crypto 
+- As this project comes to a close I'm reflecting on this project and the amount of learnt through this project. I've learned a lot about how to scrape data from a website, how to use OpenAI to analyze data, and how to use FastAPI to create an API. I've learned a lot about how projects work and   how to properly structure a project. I'm proud of the work I've done and I'm excited to see where this next project takes me. 
 ---
 © 2024 Joshua Gould. All rights reserved.
