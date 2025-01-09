@@ -72,7 +72,6 @@ class NBAAiAnalysis:
 
             PREDICTION:
             - State clearly if this is an OVER or UNDER
-            - Provide a confidence score (0-100)
             - Give a one-sentence summary of your call
 
             ANALYSIS:
@@ -113,7 +112,6 @@ class NBAAiAnalysis:
 
             PREDICTION:
             - State clearly if this is an OVER or UNDER
-            - Provide a confidence score (0-100)
             - Give a one-sentence summary of your call
 
             ANALYSIS:
@@ -152,7 +150,6 @@ class NBAAiAnalysis:
 
             PREDICTION:
             - State clearly if this is an OVER or UNDER
-            - Provide a confidence score (0-100)
             - Give a one-sentence summary of your call
 
             ANALYSIS:
@@ -192,7 +189,6 @@ class NBAAiAnalysis:
 
             PREDICTION:
             - State clearly if this is an OVER or UNDER
-            - Provide a confidence score (0-100)
             - Give a one-sentence summary of your call
 
             ANALYSIS:
@@ -220,7 +216,6 @@ class NBAAiAnalysis:
                     
                     PREDICTION:
                     - Clear OVER/UNDER call
-                    - Confidence score (0-100)
                     - One-sentence summary
                     
                     ANALYSIS:

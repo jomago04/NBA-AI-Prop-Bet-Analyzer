@@ -1,12 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from app.services.runScraper import GetNBAPlayerStats
 from app.services.aiAnalysis import NBAAiAnalysis
 from dotenv import load_dotenv
 
 load_dotenv()
-# Create the FastAPI app instance
 app = FastAPI()
+
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 player_stats = GetNBAPlayerStats()
 ai_analysis = NBAAiAnalysis()
 
@@ -15,6 +20,11 @@ class BetRequest(BaseModel):
     player_name: str
     bet_type: str
     line: float
+    
+# Add frontend route
+@app.get("/")
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
     
 @app.post("/analyze")
 async def analyzeBet(bet_request: BetRequest):

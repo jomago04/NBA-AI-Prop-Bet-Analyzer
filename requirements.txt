@@ -10,3 +10,6 @@ selenium
 webdriver-manager
 openai
 discord
+jinja2
+python-multipart
+aiofiles

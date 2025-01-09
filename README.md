@@ -22,18 +22,16 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - OpenAI
 
 ## Future Plans
-- Implement automated prop bet scraping so you no longer have to manually find prop bets
-- Start scraping historical stats and bet lines to apply machine learning models to better predict prop bets
+- Front end for the project
+- Start scraping historical stats and bet lines to apply machine learning models to better predict prop bets (might be a seperate project and use stocks instead)
   - This allows AI analysis AND machine learning models to be used to predict prop bets
 
 - Implement a frontend for the project
 - Add additional sports to the project
 
 ## To Do
-- Fix a lot of the scraping issues
-- Add more relevant scraped data to prompt
-- Add prompt engineering depending on prop bet type
 - Add better error handling and testing capabilities
+
 
 ## Update Log
 - 12/22/2024: 
@@ -70,5 +68,8 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Added FastAPI to create a type of API for the scraper to use with an AI query.
 - Added AI Analysis to the FastAPI API
 
+- 1/9/2025:
+- Attempted to add a prop line API but it's not working due to how the API works, easier for now to manually enter the prop line
+- Starting to think about a seperate project that involves stocks and crypto 
 ---
 © 2024 Joshua Gould. All rights reserved.

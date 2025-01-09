@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NBA Prop Bet Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🏀 NBA Prop Bet Analyzer</h1>
+        <form id="analyzeForm">
+            <div class="form-group">
+                <label for="player_name">Player Name:</label>
+                <input type="text" id="player_name" name="player_name" required placeholder="e.g., LeBron James">
+            </div>
+            <div class="form-group">
+                <label for="bet_type">Bet Type:</label>
+                <select id="bet_type" name="bet_type" required>
+                    <option value="points">Points</option>
+                    <option value="rebounds">Rebounds</option>
+                    <option value="assists">Assists</option>
+                    <option value="threes">Threes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="line">Line:</label>
+                <input type="number" id="line" name="line" step="0.5" required placeholder="e.g., 25.5">
+            </div>
+            <button type="submit">Analyze Bet</button>
+        </form>
+        <div class="loading">Analyzing</div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loading = document.querySelector('.loading');
+            const button = document.querySelector('button');
+            loading.style.display = 'block';
+            button.disabled = true;
+            button.style.opacity = '0.7';
+            
+            const formData = {
+                player_name: document.getElementById('player_name').value,
+                bet_type: document.getElementById('bet_type').value,
+                line: parseFloat(document.getElementById('line').value)
+            };
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                
+                const parts = data.analysis.split('ANALYSIS:');
+                const prediction = parts[0].trim();
+                const analysis = parts[1] ? parts[1].trim() : '';
+                
+                resultDiv.innerHTML = `
+                    <h2>Analysis Result</h2>
+                    <div class="analysis-section">
+                        <div class="analysis-header">📊 Details</div>
+                        <p><strong>Player:</strong> ${data.player}</p>
+                        <p><strong>Bet Type:</strong> ${data.bet_type}</p>
+                        <p><strong>Line:</strong> ${data.line}</p>
+                    </div>
+                    <div class="analysis-section">
+                        <div class="analysis-header">🎯 Prediction</div>
+                        <pre>${prediction}</pre>
+                    </div>
+                    <div class="analysis-section">
+                        <div class="analysis-header">📈 Detailed Analysis</div>
+                        <pre>${analysis}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error analyzing bet. Please try again.';
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+                button.style.opacity = '1';
+            }
+        });
+    </script>
+</body>
+</html>
