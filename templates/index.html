@@ -57,14 +57,19 @@
                 });
                 
                 const data = await response.json();
-                
                 const resultDiv = document.getElementById('result');
                 resultDiv.style.display = 'block';
-                
+
+                if (!response.ok) {
+                    const msg = data.detail || 'An error occurred. Please try again.';
+                    resultDiv.innerHTML = `<div class="error-box">❌ ${msg}</div>`;
+                    return;
+                }
+
                 const parts = data.analysis.split('ANALYSIS:');
                 const prediction = parts[0].trim();
                 const analysis = parts[1] ? parts[1].trim() : '';
-                
+
                 resultDiv.innerHTML = `
                     <h2>Analysis Result</h2>
                     <div class="analysis-section">
@@ -84,7 +89,7 @@
                 `;
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('result').innerHTML = 'Error analyzing bet. Please try again.';
+                document.getElementById('result').innerHTML = '<div class="error-box">❌ Network error. Please check your connection and try again.</div>';
             } finally {
                 loading.style.display = 'none';
                 button.disabled = false;
