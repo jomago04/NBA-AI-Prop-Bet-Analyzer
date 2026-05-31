@@ -2,15 +2,44 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 860px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px 20px;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: #333;
     min-height: 100vh;
 }
+
+/* Sport navigation */
+.sport-nav {
+    display: flex;
+    gap: 4px;
+    padding: 12px 0 0;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+}
+.nav-link {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px 8px 0 0;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.12);
+    transition: background 0.2s, color 0.2s;
+}
+.nav-link:hover {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+}
+.nav-link.active {
+    background: rgba(255,255,255,0.97);
+    color: #1e3c72;
+}
+
 .container {
     background-color: rgba(255, 255, 255, 0.97);
     padding: 30px;
-    border-radius: 15px;
+    border-radius: 0 8px 15px 15px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 h1 {

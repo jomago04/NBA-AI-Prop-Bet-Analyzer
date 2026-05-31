@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Prop Bet Analyzer{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="sport-nav">
+        <a href="/"       class="nav-link {% if sport == 'nba'    %}active{% endif %}">🏀 NBA</a>
+        <a href="/nfl"    class="nav-link {% if sport == 'nfl'    %}active{% endif %}">🏈 NFL</a>
+        <a href="/mlb"    class="nav-link {% if sport == 'mlb'    %}active{% endif %}">⚾ MLB</a>
+        <a href="/nhl"    class="nav-link {% if sport == 'nhl'    %}active{% endif %}">🏒 NHL</a>
+        <a href="/soccer" class="nav-link {% if sport == 'soccer' %}active{% endif %}">⚽ Soccer</a>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+    // ── Shared analysis renderer ───────────────────────────────────────────────
+    async function submitAnalysis(sport, formId) {
+        const form = document.getElementById(formId);
+        const loading = document.getElementById('loadingMsg');
+        const btn = document.getElementById('submitBtn');
+        const resultDiv = document.getElementById('result');
+
+        loading.style.display = 'flex';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        resultDiv.style.display = 'none';
+
+        const formData = {
+            sport: sport,
+            player_name: document.getElementById('player_name').value,
+            bet_type: document.getElementById('bet_type').value,
+            line: parseFloat(document.getElementById('line').value),
+        };
+
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+            resultDiv.style.display = 'block';
+
+            if (!response.ok) {
+                resultDiv.innerHTML = `<div class="error-box">&#10060; ${data.detail || 'An error occurred.'}</div>`;
+                return;
+            }
+
+            const parts = data.analysis.split('ANALYSIS:');
+            const predictionText = parts[0].replace('PREDICTION:', '').trim();
+            const analysisText = parts[1] ? parts[1].trim() : '';
+
+            const confMatch = predictionText.match(/Confidence:\s*(\d+)%/i);
+            const confidence = confMatch ? parseInt(confMatch[1]) : null;
+            const cleanPrediction = predictionText.replace(/Confidence:.*$/mi, '').trim();
+
+            const isOver  = /\bOVER\b/i.test(cleanPrediction);
+            const isUnder = /\bUNDER\b/i.test(cleanPrediction);
+            const badgeClass = isOver ? 'badge-over' : isUnder ? 'badge-under' : 'badge-neutral';
+            const badgeText  = isOver ? 'OVER' : isUnder ? 'UNDER' : '&#8212;';
+
+            const betTypeLabel = window.BET_TYPE_LABELS?.[data.bet_type] || data.bet_type;
+
+            resultDiv.innerHTML = `
+                <h2>Analysis Result</h2>
+
+                <div class="analysis-section details-bar">
+                    <span><strong>Player:</strong> ${data.player}</span>
+                    <span><strong>Bet:</strong> ${betTypeLabel} ${data.line}</span>
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                    ${confidence !== null ? `<span class="conf-label">Confidence: ${confidence}%</span>` : ''}
+                </div>
+
+                ${confidence !== null ? `
+                <div class="analysis-section conf-section">
+                    <div class="analysis-header">&#127919; Confidence</div>
+                    <div class="conf-bar-wrap">
+                        <div class="conf-bar" style="width:${confidence}%; background:${confidence >= 75 ? '#27ae60' : confidence >= 60 ? '#f39c12' : '#e74c3c'}"></div>
+                    </div>
+                    <div class="conf-pct">${confidence}%</div>
+                </div>` : ''}
+
+                <div class="analysis-section">
+                    <div class="analysis-header">&#127919; Prediction</div>
+                    <pre>${cleanPrediction}</pre>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-header">&#128200; Detailed Analysis</div>
+                    <pre>${analysisText}</pre>
+                </div>
+
+                ${data.stats ? buildStatsPanel(data.stats, data.bet_type) : ''}
+            `;
+        } catch (err) {
+            console.error(err);
+            document.getElementById('result').innerHTML =
+                '<div class="error-box">&#10060; Network error. Please check your connection.</div>';
+        } finally {
+            loading.style.display = 'none';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    }
+
+    // ── Generic stats panel (sport-aware) ──────────────────────────────────────
+    function buildStatsPanel(stats, betType) {
+        const sport = stats.sport;
+        if (sport === 'nba') return buildNbaPanel(stats, betType);
+        if (sport === 'nfl') return buildNflPanel(stats, betType);
+        if (sport === 'mlb') return buildMlbPanel(stats, betType);
+        if (sport === 'nhl') return buildNhlPanel(stats, betType);
+        if (sport === 'soccer') return buildSoccerPanel(stats, betType);
+        return '';
+    }
+
+    function statTable(rows) {
+        return `<table class="stats-table"><thead><tr><th>Stat</th><th>Season</th><th>Last 5</th></tr></thead><tbody>${
+            rows.map(([lbl, sv, lv]) => {
+                const diff = typeof sv === 'number' && typeof lv === 'number' ? lv - sv : null;
+                const diffStr = diff !== null
+                    ? ` <span class="${diff > 0.4 ? 'up' : diff < -0.4 ? 'down' : ''}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}</span>`
+                    : '';
+                return `<tr><td>${lbl}</td><td>${sv}</td><td>${lv}${diffStr}</td></tr>`;
+            }).join('')
+        }</tbody></table>`;
+    }
+
+    function oppTable(o, rows) {
+        return `<div><h4>Opponent: ${o.name} (${o.record})</h4>
+        <table class="stats-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>${
+            rows.map(([l, v]) => `<tr><td>${l}</td><td>${v}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    }
+
+    function gameLogTable(games, headers, keys) {
+        const head = headers.map(h => `<th>${h}</th>`).join('');
+        const body = games.map(g => {
+            const cells = keys.map(k => `<td>${g[k] !== undefined ? g[k] : '&#8212;'}</td>`).join('');
+            return `<tr><td>${g.opp}</td>${cells}</tr>`;
+        }).join('');
+        return `<div class="table-scroll"><table class="stats-table game-log-table">
+            <thead><tr><th>Opponent</th>${head}</tr></thead>
+            <tbody>${body}</tbody></table></div>`;
+    }
+
+    function panelWrap(compHtml, oppHtml, logHtml) {
+        return `<details class="stats-panel" open>
+            <summary class="analysis-header">&#128202; Stats Used <span class="toggle-hint">(click to collapse)</span></summary>
+            <div class="stats-grid">${compHtml}${oppHtml}</div>
+            <h4>Game Log (last 5, most recent first)</h4>${logHtml}
+        </details>`;
+    }
+
+    // ── NBA panel ──────────────────────────────────────────────────────────────
+    function buildNbaPanel(stats, betType) {
+        const s = stats.season_averages, l = stats.last_5_averages, o = stats.opponent;
+        const compRows = [
+            ['Points', s.pts, l.pts], ['Rebounds', s.reb, l.reb], ['Assists', s.ast, l.ast],
+            ['Steals', s.stl, l.stl], ['Blocks', s.blk, l.blk], ['3-Ptrs', s['3pm'], l['3pm']],
+            ['Minutes', s.min, l.min], ['TS%', '&#8212;', (l['ts%'] || 0) + '%'], ['Usage%', '&#8212;', (l['usg%'] || 0) + '%'],
+        ];
+        const logColMap = {
+            points: [['Pts','Reb','Ast','Min'],['pts','reb','ast','min']],
+            rebounds: [['Reb','Pts','Ast','Min'],['reb','pts','ast','min']],
+            assists: [['Ast','Pts','Min'],['ast','pts','min']],
+            threes: [['3PM','Pts','Reb','Min'],['3pm','pts','reb','min']],
+            steals: [['Stl','Blk','Pts','Min'],['stl','blk','pts','min']],
+            blocks: [['Blk','Stl','Reb','Min'],['blk','stl','reb','min']],
+            pra: [['Pts','Reb','Ast','PRA','Min'],['pts','reb','ast','pra','min']],
+        };
+        const [hdrs, keys] = logColMap[betType] || [['Pts','Reb','Ast'],['pts','reb','ast']];
+        return panelWrap(
+            `<div><h4>Season vs Last 5</h4>${statTable(compRows)}</div>`,
+            oppTable(o, [
+                ['Def Rating', o.def_rtg], ['Pace', o.pace],
+                ['Pts Allowed/g', o.pts_allowed], ['Reb Allowed/g', o.reb_allowed],
+            ]),
+            gameLogTable(stats.game_log, hdrs, keys)
+        );
+    }
+
+    // ── NFL panel ──────────────────────────────────────────────────────────────
+    function buildNflPanel(stats, betType) {
+        const s = stats.season_averages, l = stats.last_5_averages, o = stats.opponent;
+        const compRows = [
+            ['Pass Yds/g', s.pass_yds, l.pass_yds], ['Pass TDs/g', s.pass_tds, l.pass_tds],
+            ['Rush Yds/g', s.rush_yds, l.rush_yds], ['Rec Yds/g', s.rec_yds, l.rec_yds],
+            ['Receptions/g', s.receptions, l.receptions], ['Targets/g', s.targets, l.targets],
+        ].filter(([, sv]) => sv !== 0 || true);
+        const logColMap = {
+            pass_yards: [['Pass Yds','Cmp','Att','TDs'],['pass_yds','completions','pass_atts','pass_tds']],
+            rush_yards: [['Rush Yds','Att','TDs','Rec Yds'],['rush_yds','rush_atts','rush_tds','rec_yds']],
+            receiving_yards: [['Rec Yds','Rec','Tgts','TDs'],['rec_yds','receptions','targets','rec_tds']],
+            receptions: [['Rec','Tgts','Rec Yds','TDs'],['receptions','targets','rec_yds','rec_tds']],
+            pass_tds: [['Pass TDs','Pass Yds','INT'],['pass_tds','pass_yds','interceptions']],
+            rush_tds: [['Rush TDs','Rush Yds','Att'],['rush_tds','rush_yds','rush_atts']],
+        };
+        const [hdrs, keys] = logColMap[betType] || [['Pass Yds','Rush Yds','Rec Yds'],['pass_yds','rush_yds','rec_yds']];
+        return panelWrap(
+            `<div><h4>Season vs Last 5</h4>${statTable(compRows)}</div>`,
+            oppTable(o, [
+                ['Pts Allowed/g', o.pts_allowed], ['Pass Yds Allowed/g', o.pass_yds_allowed],
+                ['Rush Yds Allowed/g', o.rush_yds_allowed],
+            ]),
+            gameLogTable(stats.game_log, hdrs, keys)
+        );
+    }
+
+    // ── MLB panel ──────────────────────────────────────────────────────────────
+    function buildMlbPanel(stats, betType) {
+        const s = stats.season_averages, l = stats.last_5_averages, o = stats.opponent;
+        const isPitcher = stats.is_pitcher;
+        const compRows = isPitcher
+            ? [['ERA', s.era, '&#8212;'], ['WHIP', s.whip, '&#8212;'], ['K/9', s.k9, '&#8212;'],
+               ['Avg IP', s.avg_ip, l.avg_ip], ['Avg K', s.avg_so, l.avg_so], ['Avg ER', '&#8212;', l.avg_er]]
+            : [['BA', s.ba, '&#8212;'], ['OBP', s.obp, '&#8212;'], ['SLG', s.slg, '&#8212;'],
+               ['H/g', s.avg_h, l.avg_h], ['HR/g', s.avg_hr, l.avg_hr], ['RBI/g', '&#8212;', l.avg_rbi],
+               ['TB/g', '&#8212;', l.avg_tb]];
+        const pitcherLogs = {
+            strikeouts: [['IP','SO','H','ER','BB'],['ip','so','h','er','bb']],
+            earned_runs: [['ER','IP','H','HR','BB'],['er','ip','h','hr','bb']],
+            innings_pitched: [['IP','H','ER','SO','BB'],['ip','h','er','so','bb']],
+        };
+        const batterLogs = {
+            hits: [['H','AB','HR','RBI','TB'],['h','ab','hr','rbi','tb']],
+            home_runs: [['HR','H','TB','RBI'],['hr','h','tb','rbi']],
+            rbis: [['RBI','H','HR','AB'],['rbi','h','hr','ab']],
+            total_bases: [['TB','H','HR','AB'],['tb','h','hr','ab']],
+            strikeouts: [['SO','H','AB'],['so','h','ab']],
+        };
+        const logMap = isPitcher ? pitcherLogs : batterLogs;
+        const [hdrs, keys] = logMap[betType] || [['H','AB'],['h','ab']];
+        return panelWrap(
+            `<div><h4>Season vs Last 5</h4>${statTable(compRows)}</div>`,
+            oppTable(o, [['Record', o.record]]),
+            gameLogTable(stats.game_log, hdrs, keys)
+        );
+    }
+
+    // ── NHL panel ──────────────────────────────────────────────────────────────
+    function buildNhlPanel(stats, betType) {
+        const s = stats.season_averages, l = stats.last_5_averages, o = stats.opponent;
+        const compRows = [
+            ['Goals/g', s.goals, l.goals], ['Assists/g', s.assists, l.assists],
+            ['Points/g', s.points, l.points], ['Shots/g', s.shots, l.shots],
+            ['S%', s.s_pct + '%', '&#8212;'], ['TOI/g', '&#8212;', l.toi],
+        ];
+        const logColMap = {
+            goals: [['G','A','Sh','+/-','TOI'],['goals','assists','shots','plus_minus','toi']],
+            assists: [['A','G','Sh','TOI'],['assists','goals','shots','toi']],
+            points: [['Pts','G','A','Sh','TOI'],['points','goals','assists','shots','toi']],
+            shots: [['Sh','G','Pts','TOI'],['shots','goals','points','toi']],
+        };
+        const [hdrs, keys] = logColMap[betType] || [['Pts','G','A'],['points','goals','assists']];
+        return panelWrap(
+            `<div><h4>Season vs Last 5</h4>${statTable(compRows)}</div>`,
+            oppTable(o, [['Record', o.record]]),
+            gameLogTable(stats.game_log, hdrs, keys)
+        );
+    }
+
+    // ── Soccer panel ───────────────────────────────────────────────────────────
+    function buildSoccerPanel(stats, betType) {
+        const s = stats.season_averages, l = stats.last_5_averages, o = stats.opponent;
+        const compRows = [
+            ['Goals/g', s.goals, l.goals], ['Assists/g', s.assists, l.assists],
+            ['Shots/g', s.shots, l.shots], ['SoT/g', s.sot, l.sot],
+            ['xG/g', s.xg, l.xg], ['Conv%', s.conv + '%', '&#8212;'],
+            ['Min/g', '&#8212;', l.min],
+        ];
+        const logColMap = {
+            goals: [['G','xG','Sh','SoT','Min'],['goals','xg','shots','sot','min']],
+            assists: [['A','xA','G','Min'],['assists','xa','goals','min']],
+            shots: [['Sh','SoT','xG','Min'],['shots','sot','xg','min']],
+            shots_on_target: [['SoT','Sh','xG','Min'],['sot','shots','xg','min']],
+        };
+        const [hdrs, keys] = logColMap[betType] || [['G','A','Sh'],['goals','assists','shots']];
+        return panelWrap(
+            `<div><h4>Season vs Last 5</h4>${statTable(compRows)}</div>`,
+            oppTable(o, [
+                ['Goals Allowed/g', o.goals_allowed], ['xG Allowed/g', o.xg_allowed],
+                ['Clean Sheets', o.clean_sheets],
+            ]),
+            gameLogTable(stats.game_log, hdrs, keys)
+        );
+    }
+    </script>
+</body>
+</html>

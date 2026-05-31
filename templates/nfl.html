@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}NFL Prop Bet Analyzer{% endblock %}
+{% block content %}
+    <h1>🏈 NFL Prop Bet Analyzer</h1>
+    <form id="nflForm" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+            <label for="player_name">Player Name:</label>
+            <input type="text" id="player_name" name="player_name" required placeholder="e.g., Patrick Mahomes">
+        </div>
+        <div class="form-group">
+            <label for="bet_type">Bet Type:</label>
+            <select id="bet_type" name="bet_type" required>
+                <optgroup label="Passing">
+                    <option value="pass_yards">Passing Yards</option>
+                    <option value="pass_tds">Passing TDs</option>
+                </optgroup>
+                <optgroup label="Rushing">
+                    <option value="rush_yards">Rushing Yards</option>
+                    <option value="rush_tds">Rushing TDs</option>
+                </optgroup>
+                <optgroup label="Receiving">
+                    <option value="receiving_yards">Receiving Yards</option>
+                    <option value="receptions">Receptions</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="line">Line:</label>
+            <input type="number" id="line" name="line" step="0.5" min="0.5" required placeholder="e.g., 275.5">
+        </div>
+        <button type="submit" id="submitBtn">Analyze Bet</button>
+    </form>
+
+    <div class="loading" id="loadingMsg">
+        <div class="loading-spinner"></div>
+        <span>Scraping stats &amp; analyzing with AI…</span>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+    window.BET_TYPE_LABELS = {
+        pass_yards: 'Pass Yards', pass_tds: 'Pass TDs',
+        rush_yards: 'Rush Yards', rush_tds: 'Rush TDs',
+        receiving_yards: 'Rec Yards', receptions: 'Receptions'
+    };
+    function handleSubmit(e) {
+        e.preventDefault();
+        submitAnalysis('nfl', 'nflForm');
+    }
+    </script>
+{% endblock %}

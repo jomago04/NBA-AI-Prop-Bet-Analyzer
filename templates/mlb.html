@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}MLB Prop Bet Analyzer{% endblock %}
+{% block content %}
+    <h1>⚾ MLB Prop Bet Analyzer</h1>
+    <form id="mlbForm" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+            <label for="player_name">Player Name:</label>
+            <input type="text" id="player_name" name="player_name" required placeholder="e.g., Shohei Ohtani">
+        </div>
+        <div class="form-group">
+            <label for="bet_type">Bet Type:</label>
+            <select id="bet_type" name="bet_type" required>
+                <optgroup label="Batter Props">
+                    <option value="hits">Hits</option>
+                    <option value="home_runs">Home Runs</option>
+                    <option value="rbis">RBIs</option>
+                    <option value="total_bases">Total Bases</option>
+                    <option value="strikeouts">Strikeouts (Batter)</option>
+                </optgroup>
+                <optgroup label="Pitcher Props">
+                    <option value="strikeouts">Strikeouts (Pitcher)</option>
+                    <option value="earned_runs">Earned Runs</option>
+                    <option value="innings_pitched">Innings Pitched</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="line">Line:</label>
+            <input type="number" id="line" name="line" step="0.5" min="0.5" required placeholder="e.g., 6.5">
+        </div>
+        <button type="submit" id="submitBtn">Analyze Bet</button>
+    </form>
+
+    <div class="loading" id="loadingMsg">
+        <div class="loading-spinner"></div>
+        <span>Scraping stats &amp; analyzing with AI…</span>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+    window.BET_TYPE_LABELS = {
+        hits: 'Hits', home_runs: 'Home Runs', rbis: 'RBIs',
+        total_bases: 'Total Bases', strikeouts: 'Strikeouts',
+        earned_runs: 'Earned Runs', innings_pitched: 'Innings Pitched'
+    };
+    function handleSubmit(e) {
+        e.preventDefault();
+        submitAnalysis('mlb', 'mlbForm');
+    }
+    </script>
+{% endblock %}

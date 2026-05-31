@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}NHL Prop Bet Analyzer{% endblock %}
+{% block content %}
+    <h1>🏒 NHL Prop Bet Analyzer</h1>
+    <form id="nhlForm" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+            <label for="player_name">Player Name:</label>
+            <input type="text" id="player_name" name="player_name" required placeholder="e.g., Nathan MacKinnon">
+        </div>
+        <div class="form-group">
+            <label for="bet_type">Bet Type:</label>
+            <select id="bet_type" name="bet_type" required>
+                <option value="goals">Goals</option>
+                <option value="assists">Assists</option>
+                <option value="points">Points</option>
+                <option value="shots">Shots on Goal</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="line">Line:</label>
+            <input type="number" id="line" name="line" step="0.5" min="0.5" required placeholder="e.g., 0.5">
+        </div>
+        <button type="submit" id="submitBtn">Analyze Bet</button>
+    </form>
+
+    <div class="loading" id="loadingMsg">
+        <div class="loading-spinner"></div>
+        <span>Scraping stats &amp; analyzing with AI…</span>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+    window.BET_TYPE_LABELS = {
+        goals: 'Goals', assists: 'Assists', points: 'Points', shots: 'Shots on Goal'
+    };
+    function handleSubmit(e) {
+        e.preventDefault();
+        submitAnalysis('nhl', 'nhlForm');
+    }
+    </script>
+{% endblock %}
