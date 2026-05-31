@@ -19,3 +19,9 @@ env/
 # Operating System
 .DS_Store
 .venv/
+
+# Local bet tracking database
+data/
+*.db
+*.sqlite
+*.sqlite3
