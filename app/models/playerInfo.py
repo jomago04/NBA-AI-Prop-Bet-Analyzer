@@ -266,14 +266,14 @@ class PlayerOpposingTeamStats(BaseModel):
     opponentOffensiveRating: float
     opponentDefensiveRating: float
     opponentPaceFactor: float
-    
+
     opponentFreeThrowRate: float
     opponentThreePointRate: float
-    
+
     opponentEffectiveFieldGoalPercentage: float
     opponentTurnoverPercentage: float
     opponentDefensiveReboundPercentage: float
-    opponentFreeThrowRate: float
+    opponentOpponentFreeThrowRate: float
     #HOW OTHER TEAMS PLAY AGAINST OPPONENT
     opponentOpponentFieldGoals: float
     opponentOpponentFieldGoalsAttempted: float

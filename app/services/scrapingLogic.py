@@ -5,17 +5,26 @@ from app.utilities.nameFormat import NameFormat
 from app.config.selenium_config import SeleniumConfig
 from app.config.constants import ScraperConstants
 from app.utilities.urlLoaders import UrlLoaders
-from app.utilities.calculateDaysSinceLastGame import calculateDaysSinceLastGame  
+from app.utilities.calculateDaysSinceLastGame import calculateDaysSinceLastGame
 from app.utilities.safeConvert import safe_convert
-      
+from datetime import datetime
+
 import unicodedata
+import logging
+
+logger = logging.getLogger(__name__)
+
+def _safe_pct(numerator, denominator, multiplier=100.0):
+    """Return numerator/denominator*multiplier, or 0.0 if denominator is zero."""
+    d = float(denominator)
+    return float(numerator) / d * multiplier if d != 0 else 0.0
 
 class SeleniumScraper:
-    
-    # Initializes the scraper on run
+
     def __init__(self):
         self.driver, self.wait = SeleniumConfig.initialize_driver()
         self.urlLoaders = UrlLoaders(self.driver)
+        self.currentYear = None
         
     def __del__(self):
         SeleniumConfig.cleanup_driver(self.driver)
@@ -64,13 +73,13 @@ class SeleniumScraper:
                 if normalizedName == normalizeName(playerName)[0]:
                     urlDiv = player.find_element(By.CSS_SELECTOR, "div.search-item-url")
                     playerUrl = urlDiv.text.strip()
-                    print(f"Found match! URL: {playerUrl}") 
+                    logger.info(f"Found match! URL: {playerUrl}")
                     playerCode = playerUrl[9:-5]
-                    
+                    self.currentYear = currentYear
                     return playerCode, currentYear
-            
+
         except Exception as e:
-            print(f"Error getting player code: {str(e)}")
+            logger.error(f"Error getting player code: {str(e)}")
             return None
             
     # Gets all necessary urls for the player
@@ -90,15 +99,14 @@ class SeleniumScraper:
             return None
     
     def getOpposingTeamUrl(self):
-        # Gets the opposing team from the main player url
         try:
-            # Finds the opposing team key
             opposingTeamKey = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ScraperConstants.SELECTORS['OPPOSING_TEAM']))).text
-            opposingTeamUrl = "https://www.basketball-reference.com/teams/" + opposingTeamKey + "/2025.html"
+            year = self.currentYear or str(datetime.now().year)
+            opposingTeamUrl = f"https://www.basketball-reference.com/teams/{opposingTeamKey}/{year}.html"
         except Exception as e:
-            print(f"Error getting opposing team: {str(e)}")
+            logger.error(f"Error getting opposing team: {str(e)}")
             return None
-        
+
         return opposingTeamUrl
     
     # USES MAIN URL
@@ -142,7 +150,7 @@ class SeleniumScraper:
             return playerInfo   
         
         except Exception as e:
-            print(f"Error getting player info: {str(e)}")
+            logger.error(f"Error getting player info: {str(e)}")
             return {}
         
     # USES GAMELOG URL
@@ -254,18 +262,18 @@ class SeleniumScraper:
             while processedRows < 5 and rowIndex >= 0:
                 row = allRows[rowIndex]
                 try:
-                    verifyRow = row.find_elements(By.TAG_NAME, 'td')[7] # Checks td 7 to verify if the row is a game played
+                    verifyRow = row.find_elements(By.TAG_NAME, 'td')[7]
                     if 'Inactive' in verifyRow.text:
-                        print(f"Skipping inactive game at index {rowIndex}")
+                        logger.debug(f"Skipping inactive advanced game at index {rowIndex}")
                         rowIndex -= 1
                         continue
-                    
+
                     cells = row.find_elements(By.TAG_NAME, 'td')
                     if len(cells) < 20:
-                        print(f"Skipping row {rowIndex} - insufficient cells")
+                        logger.debug(f"Skipping advanced row {rowIndex} - insufficient cells")
                         rowIndex -= 1
                         continue
-                
+
                     gameStats = {
                         'trueShootingPercentage': safe_convert(cells[9].text, float) * 100,
                         'effectiveFieldGoalPercentage': safe_convert(cells[10].text, float) * 100,
@@ -275,13 +283,12 @@ class SeleniumScraper:
                     }
                     advancedFiveGameStats.append(gameStats)
                     processedRows += 1
-                    print(f"Successfully processed advanced game {processedRows}")
-                
-            
+                    logger.debug(f"Successfully processed advanced game {processedRows}")
+
                 except (ValueError, IndexError) as e:
-                    print(f"Error processing game at index {rowIndex}: {str(e)}")\
-                        
-            rowIndex -= 1
+                    logger.warning(f"Error processing advanced game at index {rowIndex}: {str(e)}")
+
+                rowIndex -= 1
             
             print("Advanced Stats:", advancedFiveGameStats)   
             return advancedFiveGameStats
@@ -297,47 +304,48 @@ class SeleniumScraper:
             seasonalRow = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[0]
             cells = seasonalRow.find_elements(By.TAG_NAME, 'td')
             
+            gp = int(cells[1].text)
+            gs = int(cells[2].text)
             currentSeasonTotalStats = {
-                'gamesPlayed': int(cells[1].text),
-                'gamesStarted': int(cells[2].text),
-                'gamesStartedPercentage': float(int(cells[1].text) / int(cells[2].text)) * 100,
-                
+                'gamesPlayed': gp,
+                'gamesStarted': gs,
+                'gamesStartedPercentage': _safe_pct(gs, gp),
+
                 'minutesPlayed': float(cells[3].text),
-                
+
                 'fieldGoals': float(cells[4].text),
                 'fieldGoalAttempts': float(cells[5].text),
-                'fieldGoalPercentage': float(int(cells[4].text) / int(cells[5].text)) * 100,
-                
+                'fieldGoalPercentage': _safe_pct(cells[4].text, cells[5].text),
+
                 'threePoints': float(cells[6].text),
                 'threePointAttempts': float(cells[7].text),
-                'threePointPercentage': float(int(cells[6].text) / int(cells[7].text)) * 100,
-                
+                'threePointPercentage': _safe_pct(cells[6].text, cells[7].text),
+
                 'freeThrows': float(cells[8].text),
                 'freeThrowAttempts': float(cells[9].text),
-                'freeThrowPercentage': float(int(cells[8].text) / int(cells[9].text)) * 100,
-                
+                'freeThrowPercentage': _safe_pct(cells[8].text, cells[9].text),
+
                 'offensiveRebounds': float(cells[10].text),
-                'defensiveRebounds': float(float(cells[11].text) - float(cells[10].text)),
+                'defensiveRebounds': float(cells[11].text) - float(cells[10].text),
                 'totalRebounds': float(cells[11].text),
-                
+
                 'assists': float(cells[12].text),
                 'steals': float(cells[13].text),
                 'blocks': float(cells[14].text),
                 'turnovers': float(cells[15].text),
-                
+
                 'personalFouls': float(cells[16].text),
                 'points': float(cells[17].text),
                 'averageTrueShootingPercentage': float(cells[23].text) * 100,
                 'averageUsagePercentage': float(cells[24].text),
                 'averageOffensiveRating': float(cells[25].text),
-                'averageDefensiveRating': float(cells[26].text)   
+                'averageDefensiveRating': float(cells[26].text)
             }
 
-            
             return currentSeasonTotalStats
-        
+
         except Exception as e:
-            print(f"Error retrieving current season total stats: {str(e)}")
+            logger.error(f"Error retrieving current season total stats: {str(e)}")
             return {}
     
     # USES MAIN URL
@@ -348,46 +356,48 @@ class SeleniumScraper:
             seasonalRow = table.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[-1]
             cells = seasonalRow.find_elements(By.TAG_NAME, 'td' )
             
+            gp = float(cells[4].text)
+            gs = float(cells[5].text)
             currentSeasonAverageStats = {
-                'averageGamesPlayed': float(cells[4].text),
-                'averageGamesStarted': float(cells[5].text),
-                'averageGamesStartedPercentage': float(float(cells[4].text) / float(cells[5].text)) * 100,
-                
+                'averageGamesPlayed': gp,
+                'averageGamesStarted': gs,
+                'averageGamesStartedPercentage': _safe_pct(gs, gp),
+
                 'averageMinutesPlayed': float(cells[6].text),
-                
+
                 'averageFieldGoals': float(cells[7].text),
                 'averageFieldGoalAttempts': float(cells[8].text),
-                'averageFieldGoalPercentage': float(float(cells[7].text) / float(cells[8].text)) * 100,
-                
+                'averageFieldGoalPercentage': _safe_pct(cells[7].text, cells[8].text),
+
                 'averageThreePoints': float(cells[10].text),
                 'averageThreePointAttempts': float(cells[11].text),
-                'averageThreePointPercentage': float(float(cells[10].text) / float(cells[11].text)) * 100,
-                
+                'averageThreePointPercentage': _safe_pct(cells[10].text, cells[11].text),
+
                 'averageTwoPoints': float(cells[13].text),
                 'averageTwoPointsAttempts': float(cells[14].text),
-                'averageTwoPointPercentage': float(float(cells[13].text) / float(cells[14].text)) * 100,
-                
+                'averageTwoPointPercentage': _safe_pct(cells[13].text, cells[14].text),
+
                 'averageEffectiveFieldGoalPercentage': float(cells[16].text) * 100,
-                
+
                 'averageFreeThrows': float(cells[17].text),
                 'averageFreeThrowAttempts': float(cells[18].text),
-                'averageFreeThrowPercentage': float(float(cells[17].text) / float(cells[18].text)) * 100,
-                
+                'averageFreeThrowPercentage': _safe_pct(cells[17].text, cells[18].text),
+
                 'averageOffensiveRebounds': float(cells[20].text),
                 'averageDefensiveRebounds': float(cells[21].text),
                 'averageTotalRebounds': float(cells[22].text),
-                
+
                 'averageAssists': float(cells[23].text),
                 'averageSteals': float(cells[24].text),
                 'averageBlocks': float(cells[25].text),
                 'averageTurnovers': float(cells[26].text),
-                
+
                 'averagePoints': float(cells[27].text),
             }
             return currentSeasonAverageStats
-        
+
         except Exception as e:
-            print(f"Error retrieving current season average stats: {str(e)}")
+            logger.error(f"Error retrieving current season average stats: {str(e)}")
             return {}
         
     def getOpposingTeamStats(self):
@@ -414,66 +424,68 @@ class SeleniumScraper:
             opponentTeamMiscRow = opponentTeamMiscTable.find_elements(By.CSS_SELECTOR, 'tbody tr:not(.thead)')[0]
             opponentTeamMiscCells = opponentTeamMiscRow.find_elements(By.TAG_NAME, 'td')
             
+            wins = float(opponentTeamMiscCells[0].text)
+            losses = float(opponentTeamMiscCells[1].text)
             opposingTeamStats = {
                 'opponentTeamName': opposingTeamName,
-                'opponentWins': int(opponentTeamMiscCells[0].text),
-                'opponentLosses': int(opponentTeamMiscCells[1].text),
-                'opponentWinPercentage': float(float(opponentTeamMiscCells[0].text) / (float(opponentTeamMiscCells[0].text) + float(opponentTeamMiscCells[1].text))) * 100,
-                
+                'opponentWins': int(wins),
+                'opponentLosses': int(losses),
+                'opponentWinPercentage': _safe_pct(wins, wins + losses),
+
                 'opponentAverageFieldGoals': float(averageOpponentTeamPerGameCells[2].text),
                 'opponentAverageFieldGoalsAttempted': float(averageOpponentTeamPerGameCells[3].text),
-                'opponentAverageFieldGoalPercentage': float(float(averageOpponentTeamPerGameCells[2].text) / float(averageOpponentTeamPerGameCells[3].text)) * 100,
-                
+                'opponentAverageFieldGoalPercentage': _safe_pct(averageOpponentTeamPerGameCells[2].text, averageOpponentTeamPerGameCells[3].text),
+
                 'opponentAverageThreePoints': float(averageOpponentTeamPerGameCells[5].text),
                 'opponentAverageThreePointsAttempted': float(averageOpponentTeamPerGameCells[6].text),
-                'opponentAverageThreePointPercentage': float(float(averageOpponentTeamPerGameCells[5].text) / float(averageOpponentTeamPerGameCells[6].text)) * 100,
-                
+                'opponentAverageThreePointPercentage': _safe_pct(averageOpponentTeamPerGameCells[5].text, averageOpponentTeamPerGameCells[6].text),
+
                 'opponentAverageTwoPoints': float(averageOpponentTeamPerGameCells[8].text),
                 'opponentAverageTwoPointsAttempted': float(averageOpponentTeamPerGameCells[9].text),
-                'opponentAverageTwoPointPercentage': float(float(averageOpponentTeamPerGameCells[8].text) / float(averageOpponentTeamPerGameCells[9].text)) * 100,
-                
+                'opponentAverageTwoPointPercentage': _safe_pct(averageOpponentTeamPerGameCells[8].text, averageOpponentTeamPerGameCells[9].text),
+
                 'opponentAverageFreeThrows': float(averageOpponentTeamPerGameCells[11].text),
                 'opponentAverageFreeThrowAttempts': float(averageOpponentTeamPerGameCells[12].text),
-                'opponentAverageFreeThrowPercentage': float(float(averageOpponentTeamPerGameCells[11].text) / float(averageOpponentTeamPerGameCells[12].text)) * 100,
-                
+                'opponentAverageFreeThrowPercentage': _safe_pct(averageOpponentTeamPerGameCells[11].text, averageOpponentTeamPerGameCells[12].text),
+
                 'opponentAverageOffensiveRebounds': float(averageOpponentTeamPerGameCells[14].text),
                 'opponentAverageDefensiveRebounds': float(averageOpponentTeamPerGameCells[15].text),
                 'opponentAverageTotalRebounds': float(averageOpponentTeamPerGameCells[16].text),
-                
+
                 'opponentAverageAssists': float(averageOpponentTeamPerGameCells[17].text),
                 'opponentAverageSteals': float(averageOpponentTeamPerGameCells[18].text),
                 'opponentAverageBlocks': float(averageOpponentTeamPerGameCells[19].text),
                 'opponentAverageTurnovers': float(averageOpponentTeamPerGameCells[20].text),
-                
+
                 'opponentAveragePoints': float(averageOpponentTeamPerGameCells[22].text),
-                
+
                 'opponentOffensiveRating': float(opponentTeamMiscCells[8].text),
                 'opponentDefensiveRating': float(opponentTeamMiscCells[9].text),
                 'opponentPaceFactor': float(opponentTeamMiscCells[10].text),
                 'opponentFreeThrowRate': float(opponentTeamMiscCells[11].text),
                 'opponentThreePointRate': float(opponentTeamMiscCells[12].text),
-                
+
                 'opponentEffectiveFieldGoalPercentage': float(opponentTeamMiscCells[16].text) * 100,
                 'opponentTurnoverPercentage': float(opponentTeamMiscCells[17].text),
                 'opponentDefensiveReboundPercentage': float(opponentTeamMiscCells[18].text),
-                'opponentFreeThrowRate': float(opponentTeamMiscCells[19].text) * 100,
-                
+                'opponentOpponentFreeThrowRate': float(opponentTeamMiscCells[19].text) * 100,
+
                 'opponentOpponentFieldGoals': float(averageOpponentOpponentTeamPerGameCells[2].text),
                 'opponentOpponentFieldGoalsAttempted': float(averageOpponentOpponentTeamPerGameCells[3].text),
-                'opponentOpponentFieldGoalPercentage': float(float(averageOpponentOpponentTeamPerGameCells[2].text) / float(averageOpponentOpponentTeamPerGameCells[3].text)) * 100,
-                
+                'opponentOpponentFieldGoalPercentage': _safe_pct(averageOpponentOpponentTeamPerGameCells[2].text, averageOpponentOpponentTeamPerGameCells[3].text),
+
                 'opponentOpponentThreePoints': float(averageOpponentOpponentTeamPerGameCells[5].text),
                 'opponentOpponentThreePointsAttempted': float(averageOpponentOpponentTeamPerGameCells[6].text),
-                'opponentOpponentThreePointPercentage': float(float(averageOpponentOpponentTeamPerGameCells[5].text) / float(averageOpponentOpponentTeamPerGameCells[6].text)) * 100,
-                
+                'opponentOpponentThreePointPercentage': _safe_pct(averageOpponentOpponentTeamPerGameCells[5].text, averageOpponentOpponentTeamPerGameCells[6].text),
+
                 'opponentOpponentTwoPoints': float(averageOpponentOpponentTeamPerGameCells[8].text),
                 'opponentOpponentTwoPointsAttempted': float(averageOpponentOpponentTeamPerGameCells[9].text),
-                'opponentOpponentTwoPointPercentage': float(float(averageOpponentOpponentTeamPerGameCells[8].text) / float(averageOpponentOpponentTeamPerGameCells[9].text)) * 100,
-                
+                'opponentOpponentTwoPointPercentage': _safe_pct(averageOpponentOpponentTeamPerGameCells[8].text, averageOpponentOpponentTeamPerGameCells[9].text),
+
                 'opponentOpponentFreeThrows': float(averageOpponentOpponentTeamPerGameCells[11].text),
                 'opponentOpponentFreeThrowsAttempted': float(averageOpponentOpponentTeamPerGameCells[12].text),
-                'opponentOpponentFreeThrowPercentage': float(float(averageOpponentOpponentTeamPerGameCells[11].text) / float(averageOpponentOpponentTeamPerGameCells[12].text)) * 100,
-                
+                'opponentOpponentFreeThrowPercentage': _safe_pct(averageOpponentOpponentTeamPerGameCells[11].text, averageOpponentOpponentTeamPerGameCells[12].text),
+
                 'opponentOpponentOffensiveRebounds': float(averageOpponentOpponentTeamPerGameCells[14].text),
                 'opponentOpponentDefensiveRebounds': float(averageOpponentOpponentTeamPerGameCells[15].text),
                 'opponentOpponentTotalRebounds': float(averageOpponentOpponentTeamPerGameCells[16].text),
@@ -482,14 +494,13 @@ class SeleniumScraper:
                 'opponentOpponentAverageSteals': float(averageOpponentOpponentTeamPerGameCells[18].text),
                 'opponentOpponentAverageBlocks': float(averageOpponentOpponentTeamPerGameCells[19].text),
                 'opponentOpponentAverageTurnovers': float(averageOpponentOpponentTeamPerGameCells[20].text),
-                
+
                 'opponentOpponentAveragePoints': float(averageOpponentOpponentTeamPerGameCells[22].text),
-                
             }
             return opposingTeamStats
-        
+
         except Exception as e:
-            print(f"Error retrieving opposing team stats: {str(e)}")
+            logger.error(f"Error retrieving opposing team stats: {str(e)}")
             return {}
       
     def calculatePlayerFiveGameAverages(self, lastFiveGameStats: list, advancedFiveGameStats: list):

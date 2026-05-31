@@ -1,6 +1,9 @@
 from app.services.scrapingLogic import SeleniumScraper
 from app.models.playerInfo import PlayerIndividualFiveGameStats, PlayerLastFiveGameStats, PlayerCurrentSeasonTotalStats, PlayerCurrentSeasonAverageStats, PlayerInfo, PlayerOpposingTeamStats
 from app.utilities.urlLoaders import UrlLoaders
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GetNBAPlayerStats:
     def __init__(self):
@@ -10,7 +13,7 @@ class GetNBAPlayerStats:
     def __del__(self):
         if hasattr(self, 'scraper'):
             self.scraper.__del__()
-        
+
     def getAllPlayerStats(self, playerName):
         try:
             # Gets the player urls
@@ -57,9 +60,9 @@ class GetNBAPlayerStats:
             opposingTeamStats = PlayerOpposingTeamStats(**self.scraper.getOpposingTeamStats())
                 
                 
-            print("scraping complete")
+            logger.info(f"Scraping complete for {playerName}")
             return playerInfo, currentSeasonAverageStats, currentSeasonTotalStats, playerLastFiveGameStats, opposingTeamStats, playerIndividualFiveGameStats
-        
+
         except Exception as e:
-            print(f"Error: {str(e)}")
+            logger.error(f"Error scraping stats for {playerName}: {str(e)}")
             return None, None, None, None, None, None
