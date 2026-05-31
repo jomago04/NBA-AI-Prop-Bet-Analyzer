@@ -14,6 +14,29 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Uses OpenAI to analyze the data and provide a prop bet analysis
 - Uses FastAPI to create a type of API for the scraper to use with an AI query
 - Displays the data in a frontend
+- **Tracks prediction outcomes**: every AI analysis is saved to a SQLite database, can be
+  graded against the real bet result, and rolled up into accuracy stats
+
+## Outcome Tracking
+
+Each analysis from `/analyze` is persisted with its parsed OVER/UNDER prediction. Once a
+game is played you submit the real stat result and the system grades whether the bot was
+right. These graded records are the foundation for an upcoming feature that simulates a
+period in time to test the bot's probability outcomes (backtesting).
+
+Endpoints:
+- `POST /analyze` — runs analysis and stores it; response includes the new `id`,
+  `predicted_direction`, and `confidence`. Optional `game_date` (ISO date) can be supplied.
+- `POST /analyses/{id}/outcome` — submit `{"actual_value": <number>}` to settle a bet.
+  The system computes OVER/UNDER/PUSH vs the line and whether the prediction was correct.
+- `GET /analyses/{id}` — fetch a single stored analysis and its outcome.
+- `GET /analyses` — list/filter analyses (`status`, `player_name`, `bet_type`,
+  `start_date`, `end_date`).
+- `GET /stats/accuracy` — aggregate accuracy, filterable by player, bet type, and date
+  range (the basis for the time-period simulation feature).
+
+The database lives at `data/nba_bets.db` by default (override with the `BET_DB_PATH`
+environment variable). Run the offline tests with `python tests/test_outcome_tracker.py`.
 
 ## Technologies
 - Python
@@ -72,5 +95,13 @@ Python project that scrapes NBA player statistics for prop bet analysis.
 - Attempted to add a prop line API but it's not working due to how the API works, easier for now to manually enter the prop line
 - Starting to think about a seperate project that involves stocks and crypto 
 - As this project comes to a close I'm reflecting on this project and the amount of learnt through this project. I've learned a lot about how to scrape data from a website, how to use OpenAI to analyze data, and how to use FastAPI to create an API. I've learned a lot about how projects work and   how to properly structure a project. I'm proud of the work I've done and I'm excited to see where this next project takes me. 
+
+- 5/31/2026:
+- Added bet outcome tracking: AI analyses are now persisted to a SQLite database with their
+  parsed OVER/UNDER prediction, can be settled against the real bet result, and aggregated
+  into accuracy stats (filterable by player, bet type, and date range).
+- This lays the groundwork for the next feature: simulating a period in time to test the
+  bot's probability outcomes (backtesting).
+- Added an offline test suite for the tracking logic under `tests/`.
 ---
 © 2024 Joshua Gould. All rights reserved.
