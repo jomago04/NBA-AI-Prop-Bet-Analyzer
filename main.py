@@ -18,9 +18,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 player_stats = GetNBAPlayerStats()
 ai_analysis = NBAAiAnalysis()
 
+BetType = Literal['points', 'rebounds', 'assists', 'threes', 'steals', 'blocks', 'pra']
+
 class BetRequest(BaseModel):
     player_name: str
-    bet_type: Literal['points', 'rebounds', 'assists', 'threes']
+    bet_type: BetType
     line: float
 
     @field_validator('player_name')
@@ -38,9 +40,60 @@ class BetRequest(BaseModel):
             raise ValueError('Line must be a positive number')
         return v
 
+
+def _build_stats_panel(season_avgs, l5, opposing_team, individual_games):
+    """Build the stats dict returned to the frontend for display."""
+    return {
+        "season_averages": {
+            "pts": season_avgs.averagePoints,
+            "reb": season_avgs.averageTotalRebounds,
+            "ast": season_avgs.averageAssists,
+            "stl": season_avgs.averageSteals,
+            "blk": season_avgs.averageBlocks,
+            "3pm": season_avgs.averageThreePoints,
+            "min": season_avgs.averageMinutesPlayed,
+        },
+        "last_5_averages": {
+            "pts": round(l5.averagePoints, 1),
+            "reb": round(l5.averageTotalRebounds, 1),
+            "ast": round(l5.averageAssists, 1),
+            "stl": round(l5.averageSteals, 1),
+            "blk": round(l5.averageBlocks, 1),
+            "3pm": round(l5.averageThreePoints, 1),
+            "min": round(l5.averageMinutesPlayed, 1),
+            "ts%": round(l5.averageTrueShootingPercentage, 1),
+            "usg%": round(l5.averageUsagePercentage, 1),
+        },
+        "opponent": {
+            "name": opposing_team.opponentTeamName,
+            "record": f"{opposing_team.opponentWins}-{opposing_team.opponentLosses}",
+            "def_rtg": opposing_team.opponentDefensiveRating,
+            "off_rtg": opposing_team.opponentOffensiveRating,
+            "pace": opposing_team.opponentPaceFactor,
+            "pts_allowed": opposing_team.opponentAveragePoints,
+            "reb_allowed": opposing_team.opponentAverageTotalRebounds,
+        },
+        "game_log": [
+            {
+                "opp": ("@ " if g.isAway else "vs ") + g.opponent,
+                "pts": g.points,
+                "reb": g.totalRebounds,
+                "ast": g.assists,
+                "stl": g.steals,
+                "blk": g.blocks,
+                "3pm": g.threePoints,
+                "pra": g.points + g.totalRebounds + g.assists,
+                "min": round(g.minutesPlayed, 1),
+            }
+            for g in individual_games
+        ],
+    }
+
+
 @app.get("/")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.post("/analyze")
 async def analyzeBet(bet_request: BetRequest):
@@ -50,7 +103,10 @@ async def analyzeBet(bet_request: BetRequest):
         )
 
         if not all([player_info, season_averages, season_totals, last_five_game_averages, opposing_team, individual_last_five_games]):
-            raise HTTPException(status_code=404, detail=f"Could not retrieve stats for '{bet_request.player_name}'. Check the player name and try again.")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Could not retrieve stats for '{bet_request.player_name}'. Check the spelling and try again."
+            )
 
         analysis = await ai_analysis.analyze_bet(
             player_name=bet_request.player_name,
@@ -62,7 +118,7 @@ async def analyzeBet(bet_request: BetRequest):
                 'season_totals': season_totals,
                 'last_five_game_averages': last_five_game_averages,
                 'opposing_team': opposing_team,
-                'individual_last_five_games': individual_last_five_games
+                'individual_last_five_games': individual_last_five_games,
             }
         )
 
@@ -71,6 +127,12 @@ async def analyzeBet(bet_request: BetRequest):
             "bet_type": bet_request.bet_type,
             "line": bet_request.line,
             "analysis": analysis,
+            "stats": _build_stats_panel(
+                season_averages,
+                last_five_game_averages,
+                opposing_team,
+                individual_last_five_games,
+            ),
         }
 
     except HTTPException:

@@ -15,49 +15,63 @@
             <div class="form-group">
                 <label for="bet_type">Bet Type:</label>
                 <select id="bet_type" name="bet_type" required>
-                    <option value="points">Points</option>
-                    <option value="rebounds">Rebounds</option>
-                    <option value="assists">Assists</option>
-                    <option value="threes">Threes</option>
+                    <optgroup label="Primary Props">
+                        <option value="points">Points</option>
+                        <option value="rebounds">Rebounds</option>
+                        <option value="assists">Assists</option>
+                        <option value="threes">Three-Pointers</option>
+                    </optgroup>
+                    <optgroup label="Defensive Props">
+                        <option value="steals">Steals</option>
+                        <option value="blocks">Blocks</option>
+                    </optgroup>
+                    <optgroup label="Combo Props">
+                        <option value="pra">Points + Rebounds + Assists (PRA)</option>
+                    </optgroup>
                 </select>
             </div>
             <div class="form-group">
                 <label for="line">Line:</label>
-                <input type="number" id="line" name="line" step="0.5" required placeholder="e.g., 25.5">
+                <input type="number" id="line" name="line" step="0.5" min="0.5" required placeholder="e.g., 25.5">
             </div>
-            <button type="submit">Analyze Bet</button>
+            <button type="submit" id="submitBtn">Analyze Bet</button>
         </form>
-        <div class="loading">Analyzing</div>
+
+        <div class="loading" id="loadingMsg">
+            <div class="loading-spinner"></div>
+            <span>Scraping stats &amp; analyzing with AI…</span>
+        </div>
+
         <div id="result"></div>
     </div>
 
     <script>
         document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const loading = document.querySelector('.loading');
-            const button = document.querySelector('button');
-            loading.style.display = 'block';
-            button.disabled = true;
-            button.style.opacity = '0.7';
-            
+
+            const loading = document.getElementById('loadingMsg');
+            const btn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+
+            loading.style.display = 'flex';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            resultDiv.style.display = 'none';
+
             const formData = {
                 player_name: document.getElementById('player_name').value,
                 bet_type: document.getElementById('bet_type').value,
                 line: parseFloat(document.getElementById('line').value)
             };
-            
+
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                
+
                 const data = await response.json();
-                const resultDiv = document.getElementById('result');
                 resultDiv.style.display = 'block';
 
                 if (!response.ok) {
@@ -67,35 +81,154 @@
                 }
 
                 const parts = data.analysis.split('ANALYSIS:');
-                const prediction = parts[0].trim();
-                const analysis = parts[1] ? parts[1].trim() : '';
+                const predictionText = parts[0].replace('PREDICTION:', '').trim();
+                const analysisText = parts[1] ? parts[1].trim() : '';
+
+                // Extract confidence percentage
+                const confMatch = predictionText.match(/Confidence:\s*(\d+)%/i);
+                const confidence = confMatch ? parseInt(confMatch[1]) : null;
+                const cleanPrediction = predictionText.replace(/Confidence:.*$/mi, '').trim();
+
+                // Determine OVER/UNDER for badge color
+                const isOver = /\bOVER\b/i.test(cleanPrediction);
+                const isUnder = /\bUNDER\b/i.test(cleanPrediction);
+                const badgeClass = isOver ? 'badge-over' : isUnder ? 'badge-under' : 'badge-neutral';
+                const badgeText = isOver ? 'OVER' : isUnder ? 'UNDER' : '—';
+
+                const betTypeLabel = {
+                    points: 'Points', rebounds: 'Rebounds', assists: 'Assists',
+                    threes: 'Three-Pointers', steals: 'Steals', blocks: 'Blocks', pra: 'PRA'
+                }[data.bet_type] || data.bet_type;
 
                 resultDiv.innerHTML = `
                     <h2>Analysis Result</h2>
-                    <div class="analysis-section">
-                        <div class="analysis-header">📊 Details</div>
-                        <p><strong>Player:</strong> ${data.player}</p>
-                        <p><strong>Bet Type:</strong> ${data.bet_type}</p>
-                        <p><strong>Line:</strong> ${data.line}</p>
+
+                    <div class="analysis-section details-bar">
+                        <span><strong>Player:</strong> ${data.player}</span>
+                        <span><strong>Bet:</strong> ${betTypeLabel} ${data.line}</span>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        ${confidence !== null ? `<span class="conf-label">Confidence: ${confidence}%</span>` : ''}
                     </div>
+
+                    ${confidence !== null ? `
+                    <div class="analysis-section conf-section">
+                        <div class="analysis-header">🎯 Confidence</div>
+                        <div class="conf-bar-wrap">
+                            <div class="conf-bar" style="width:${confidence}%; background:${confidence >= 75 ? '#27ae60' : confidence >= 60 ? '#f39c12' : '#e74c3c'}"></div>
+                        </div>
+                        <div class="conf-pct">${confidence}%</div>
+                    </div>` : ''}
+
                     <div class="analysis-section">
                         <div class="analysis-header">🎯 Prediction</div>
-                        <pre>${prediction}</pre>
+                        <pre>${cleanPrediction}</pre>
                     </div>
+
                     <div class="analysis-section">
                         <div class="analysis-header">📈 Detailed Analysis</div>
-                        <pre>${analysis}</pre>
+                        <pre>${analysisText}</pre>
                     </div>
+
+                    ${data.stats ? buildStatsPanel(data.stats, data.bet_type) : ''}
                 `;
+
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('result').innerHTML = '<div class="error-box">❌ Network error. Please check your connection and try again.</div>';
+                document.getElementById('result').innerHTML =
+                    '<div class="error-box">❌ Network error. Please check your connection and try again.</div>';
             } finally {
                 loading.style.display = 'none';
-                button.disabled = false;
-                button.style.opacity = '1';
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
         });
+
+        function buildStatsPanel(stats, betType) {
+            const s = stats.season_averages;
+            const l = stats.last_5_averages;
+            const o = stats.opponent;
+            const games = stats.game_log || [];
+
+            const statRows = [
+                ['Points', s.pts, l.pts],
+                ['Rebounds', s.reb, l.reb],
+                ['Assists', s.ast, l.ast],
+                ['Steals', s.stl, l.stl],
+                ['Blocks', s.blk, l.blk],
+                ['3-Pointers', s['3pm'], l['3pm']],
+                ['Minutes', s.min, l.min],
+                ['TS%', '—', l['ts%'] + '%'],
+                ['Usage%', '—', l['usg%'] + '%'],
+            ];
+
+            const compTable = statRows.map(([label, sv, lv]) => {
+                const diff = typeof sv === 'number' && typeof lv === 'number' ? lv - sv : null;
+                const diffStr = diff !== null ? `<span class="${diff > 0.4 ? 'up' : diff < -0.4 ? 'down' : ''}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}</span>` : '';
+                return `<tr><td>${label}</td><td>${sv}</td><td>${lv}${diffStr ? ' ' + diffStr : ''}</td></tr>`;
+            }).join('');
+
+            const gameLogCols = {
+                points:   ['Pts','Reb','Ast','Min'],
+                rebounds: ['Reb','Pts','Ast','Min'],
+                assists:  ['Ast','Pts','TOV (est)','Min'],
+                threes:   ['3PM','Pts','Reb','Min'],
+                steals:   ['Stl','Blk','Pts','Min'],
+                blocks:   ['Blk','Stl','Reb','Min'],
+                pra:      ['Pts','Reb','Ast','PRA','Min'],
+            };
+            const colKeys = {
+                points:   ['pts','reb','ast','min'],
+                rebounds: ['reb','pts','ast','min'],
+                assists:  ['ast','pts','min','min'],
+                threes:   ['3pm','pts','reb','min'],
+                steals:   ['stl','blk','pts','min'],
+                blocks:   ['blk','stl','reb','min'],
+                pra:      ['pts','reb','ast','pra','min'],
+            };
+            const headers = gameLogCols[betType] || ['Pts','Reb','Ast','Min'];
+            const keys = colKeys[betType] || ['pts','reb','ast','min'];
+
+            const logRows = games.map(g => {
+                const cells = keys.map(k => `<td>${g[k] !== undefined ? g[k] : '—'}</td>`).join('');
+                return `<tr><td>${g.opp}</td>${cells}</tr>`;
+            }).join('');
+
+            return `
+            <details class="stats-panel" open>
+                <summary class="analysis-header">📊 Stats Used <span class="toggle-hint">(click to collapse)</span></summary>
+
+                <div class="stats-grid">
+                    <div>
+                        <h4>Season vs. Last 5 Averages</h4>
+                        <table class="stats-table">
+                            <thead><tr><th>Stat</th><th>Season</th><th>Last 5</th></tr></thead>
+                            <tbody>${compTable}</tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h4>Opponent: ${o.name} (${o.record})</h4>
+                        <table class="stats-table">
+                            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                            <tbody>
+                                <tr><td>Def Rating</td><td>${o.def_rtg}</td></tr>
+                                <tr><td>Off Rating</td><td>${o.off_rtg}</td></tr>
+                                <tr><td>Pace</td><td>${o.pace}</td></tr>
+                                <tr><td>Pts Allowed/g</td><td>${o.pts_allowed}</td></tr>
+                                <tr><td>Reb Allowed/g</td><td>${o.reb_allowed}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <h4>Game Log (last 5, most recent first)</h4>
+                <div class="table-scroll">
+                    <table class="stats-table game-log-table">
+                        <thead><tr><th>Opponent</th>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                        <tbody>${logRows}</tbody>
+                    </table>
+                </div>
+            </details>`;
+        }
     </script>
 </body>
 </html>
